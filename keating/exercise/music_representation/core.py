@@ -7,6 +7,9 @@ from enum import Enum
 Fraction = Tuple[int, int]
 Pitch = int
 RelativePitch = int
+Level = int
+
+OCTAVE = 12
 
 
 class Mode(Enum):
