@@ -1,6 +1,6 @@
 """ Core musical structures"""
 
-from typing import Optional, Tuple, NamedTuple
+from typing import Tuple, NamedTuple
 from enum import Enum
 
 
@@ -35,4 +35,4 @@ class Spacement(NamedTuple):
 class Note(NamedTuple):
     relative_pitch: RelativePitch
     spacement: Spacement
-    modifiers: Optional[Tuple[Modifier]] = None
+    modifiers: Tuple[Modifier, ...] = ()
