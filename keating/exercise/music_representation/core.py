@@ -4,17 +4,23 @@ from typing import Tuple, NamedTuple
 from enum import Enum
 
 
-Fraction = Tuple[int, int]
 Pitch = int
 RelativePitch = int
-Level = int
 
 OCTAVE = 12
 
 
+class Fraction(NamedTuple):
+    numer: int
+    denom: int
+
+    def __repr__(self) -> str:
+        return self.numer + "/" + self.denom
+
+
 class Mode(Enum):
-    MAJOR = "major"
-    MINOR = "minor"
+    MAJOR = "maj"
+    MINOR = "min"
 
 
 class Modifier(Enum):
@@ -33,6 +39,9 @@ class Key(Enum):
 class Spacement(NamedTuple):
     position: Fraction
     duration: Fraction
+
+    def __repr__(self) -> str:
+        return f"pos_{self.position}_dur_{self.duration}"
 
 
 class Note(NamedTuple):
