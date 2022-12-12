@@ -188,3 +188,17 @@ class MultiRhythm(MusicalElement):
 
     def _default_name(self) -> str:
         return "_".join(rhythm.name for rhythm in self.rhythms)
+
+
+@frozen
+class DoubleRhythm(MultiRhythm):
+    def __attrs_post_init__(self) -> None:
+        assert (
+            len(self.rhythms) == 2
+        ), f"DoubleRhythm {self.name} needs to have exactly 2 rhythms"
+
+    def left(self) -> Rhythm:
+        return self.rhythms[0]
+
+    def right(self) -> Rhythm:
+        return self.rhythms[1]
