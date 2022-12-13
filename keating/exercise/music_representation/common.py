@@ -149,6 +149,8 @@ class Arpeggio(MusicalElement):
         if self.arpeggiatior_fn is not None:
             return self.arpeggiatior_fn(chord.relative_pitches)
 
+        assert self.pitch_idx_sequence is not None
+
         assert all(
             pitch >= 0 for pitch in self.pitch_idx_sequence
         ), f"Arpeggio {self.name} has negative pitch idx in pitch_idx_sequence"
@@ -166,7 +168,7 @@ class Arpeggio(MusicalElement):
         )
 
     def _default_name(self) -> str:
-        if self.arpeggiatior_fn:
+        if self.pitch_idx_sequence is None:
             raise NotImplementedError(
                 f"You must specify name for method based arpeggio"
             )
@@ -202,3 +204,14 @@ class DoubleRhythm(MultiRhythm):
 
     def right(self) -> Rhythm:
         return self.rhythms[1]
+
+
+@frozen
+class Melody(MusicalElement):
+    pitch_progression: PitchProgression
+    rhythm: Rhythm
+
+    def _default_name(self) -> str:
+        return (
+            f"pitch_progression_{self.pitch_progression.name}_rhythm_{self.rhythm.name}"
+        )
