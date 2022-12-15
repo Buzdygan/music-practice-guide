@@ -1,13 +1,14 @@
 """ Common musical elements."""
 
+from math import lcm
 from typing import (
+    List,
     Tuple,
     Optional,
     Set,
     Mapping,
     Dict,
     Iterator,
-    Callable,
 )
 from abc import abstractmethod
 from collections import defaultdict
@@ -15,6 +16,7 @@ from attrs import frozen, field
 
 from exercise.music_representation.core import (
     Fraction,
+    Note,
     RelativePitch,
     Spacement,
     Mode,
@@ -46,11 +48,7 @@ class MusicalElement:
 
 @frozen
 class ChordType(MusicalElement):
-    _intervals: Set[RelativePitch]
-
-    @property
-    def intervals(self) -> Set[RelativePitch]:
-        return self._intervals.union({0})
+    intervals: Set[RelativePitch]
 
     def _default_name(self) -> str:
         return "-".join(map(str, sorted(self.intervals)))
@@ -132,25 +130,20 @@ class Scale(PitchProgression):
         ), f"Scale {self.name} has pitches from outside octave range."
 
 
-@frozen
 class Arpeggio(MusicalElement):
+    @abstractmethod
+    def __call__(self, chord: Chord) -> PitchProgression:
+        """Arpeggiate chord."""
 
-    pitch_idx_sequence: Optional[Tuple[RelativePitch, ...]] = field(default=None)
-    arpeggiatior_fn: Optional[Callable[[Set[RelativePitch]], PitchProgression]] = field(
-        default=None
-    )
+    def _default_name(self) -> str:
+        return self.__class__.__name__
 
-    def __attrs_post_init__(self) -> None:
-        assert (self.pitch_idx_sequence is None) ^ (
-            self.arpeggiatior_fn is None
-        ), "Exactly one of _interval_sequence, _apreggiator_fn must be set for Arpeggio."
 
-    def arpeggiate(self, chord: Chord) -> PitchProgression:
-        if self.arpeggiatior_fn is not None:
-            return self.arpeggiatior_fn(chord.relative_pitches)
+@frozen
+class PitchSequenceArpeggio(Arpeggio):
+    pitch_idx_sequence: Tuple[RelativePitch, ...]
 
-        assert self.pitch_idx_sequence is not None
-
+    def __call__(self, chord: Chord) -> PitchProgression:
         assert all(
             pitch >= 0 for pitch in self.pitch_idx_sequence
         ), f"Arpeggio {self.name} has negative pitch idx in pitch_idx_sequence"
@@ -168,10 +161,6 @@ class Arpeggio(MusicalElement):
         )
 
     def _default_name(self) -> str:
-        if self.pitch_idx_sequence is None:
-            raise NotImplementedError(
-                f"You must specify name for method based arpeggio"
-            )
         return "-".join(map(str, self.pitch_idx_sequence))
 
 
@@ -182,6 +171,9 @@ class Rhythm(MusicalElement):
 
     def _default_name(self) -> str:
         return f"meter_{self.meter}_" + "-".join(map(str, self.spacements))
+
+    def __iter__(self) -> Iterator[Spacement]:
+        yield from self.spacements
 
 
 @frozen
@@ -215,3 +207,16 @@ class Melody(MusicalElement):
         return (
             f"pitch_progression_{self.pitch_progression.name}_rhythm_{self.rhythm.name}"
         )
+
+    @property
+    def notes(self) -> List[Note]:
+        pitches = list(self.pitch_progression)
+        spacements = list(self.rhythm)
+        notes_num = lcm(len(pitches), len(spacements))
+
+        pitches = pitches * (notes_num // len(pitches))
+        spacements = spacements * (notes_num // len(spacements))
+        return [
+            Note.from_pitch_spacement(pitch, spacement)
+            for pitch, spacement in zip(pitches, spacements)
+        ]
