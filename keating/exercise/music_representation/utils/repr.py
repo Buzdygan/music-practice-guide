@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import List, Tuple
 
 ROMAN_SYMBOLS_MAP = {
     1: "I",
@@ -11,7 +11,7 @@ ROMAN_SYMBOLS_MAP = {
 }
 
 
-def _get_extended_symbols_map() -> Dict[int, str]:
+def _get_extended_symbols_map() -> List[Tuple[int, str]]:
     sorted_symbol_mappings = sorted(ROMAN_SYMBOLS_MAP.items(), reverse=True)
 
     def find_prev_symbol(idx: int, symbol: str, quantity: int) -> Tuple[int, str]:
@@ -39,3 +39,4 @@ def to_roman_numeral(number: int) -> str:
             number -= quantity
         if number == 0:
             return numeral
+    return numeral

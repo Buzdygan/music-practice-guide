@@ -22,7 +22,7 @@ from exercise.music_representation.core import (
     Mode,
     OCTAVE,
 )
-from exercise.music_representation.utils import to_roman_numeral
+from exercise.music_representation.utils.repr import to_roman_numeral
 
 
 @frozen
