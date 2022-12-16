@@ -2,7 +2,13 @@ import pytest
 import jsonpickle
 from fractions import Fraction
 
-from exercise.music_representation.core import Spacement
+from exercise.music_representation.core import Note, Spacement
+from exercise.music_representation.utils.spacements import (
+    EIGHTH,
+    QUARTER,
+    dot,
+    rhytmic_line,
+)
 
 from keating.exercise.music_representation.common import (
     Melody,
@@ -60,9 +66,40 @@ def test_melody() -> None:
         ),
         rhythm=Rhythm(
             meter=Fraction(4, 4),
-            spacements=(
-                Spacement(position=Fraction(0, 4), duration=Fraction(1, 4)),
-                Spacement(position=Fraction(0, 1), duration=Fraction(1, 4)),
-            ),
+            spacements=rhytmic_line(durations=(QUARTER, dot(QUARTER), QUARTER, EIGHTH)),
         ),
     )
+    assert list(melody) == [
+        Note(
+            relative_pitch=0,
+            spacement=Spacement(position=Fraction(0), duration=QUARTER),
+        ),
+        Note(
+            relative_pitch=2,
+            spacement=Spacement(position=Fraction(1, 4), duration=dot(QUARTER)),
+        ),
+        Note(
+            relative_pitch=4,
+            spacement=Spacement(position=Fraction(5, 8), duration=QUARTER),
+        ),
+        Note(
+            relative_pitch=5,
+            spacement=Spacement(position=Fraction(7, 8), duration=EIGHTH),
+        ),
+        Note(
+            relative_pitch=7,
+            spacement=Spacement(position=Fraction(1), duration=QUARTER),
+        ),
+        Note(
+            relative_pitch=9,
+            spacement=Spacement(position=Fraction(5, 4), duration=dot(QUARTER)),
+        ),
+        Note(
+            relative_pitch=11,
+            spacement=Spacement(position=Fraction(13, 8), duration=QUARTER),
+        ),
+        Note(
+            relative_pitch=12,
+            spacement=Spacement(position=Fraction(15, 8), duration=EIGHTH),
+        ),
+    ]

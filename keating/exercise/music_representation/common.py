@@ -2,7 +2,6 @@
 
 from math import lcm
 from typing import (
-    List,
     Tuple,
     Optional,
     Set,
@@ -23,6 +22,7 @@ from exercise.music_representation.core import (
     OCTAVE,
 )
 from exercise.music_representation.utils.repr import to_roman_numeral
+from exercise.music_representation.utils.spacements import multiply_spacements
 
 
 @frozen
@@ -106,6 +106,9 @@ class ChordProgression(MusicalElement):
                 for pitch, chord_type in self.chords
             )
         )
+
+    def __iter__(self) -> Iterator[Tuple[RelativePitch, ChordType]]:
+        yield from self.chords
 
 
 @frozen
@@ -208,15 +211,53 @@ class Melody(MusicalElement):
             f"pitch_progression_{self.pitch_progression.name}_rhythm_{self.rhythm.name}"
         )
 
-    @property
-    def notes(self) -> List[Note]:
+    def __iter__(self) -> Iterator[Note]:
         pitches = list(self.pitch_progression)
         spacements = list(self.rhythm)
         notes_num = lcm(len(pitches), len(spacements))
 
         pitches = pitches * (notes_num // len(pitches))
-        spacements = spacements * (notes_num // len(spacements))
-        return [
-            Note.from_pitch_spacement(pitch, spacement)
+        spacements = multiply_spacements(
+            spacements=spacements, factor=notes_num // len(spacements)
+        )
+        yield from (
+            Note(relative_pitch=pitch, spacement=spacement)
             for pitch, spacement in zip(pitches, spacements)
-        ]
+        )
+
+
+def transpose(
+    pitch_progression: PitchProgression, relative_pitch: RelativePitch
+) -> PitchProgression:
+    return PitchProgression(
+        name=f"pitch_progression_{pitch_progression.name}_transposed_{relative_pitch}",
+        relative_pitches=tuple(
+            pitch + relative_pitch for pitch in pitch_progression.relative_pitches
+        ),
+    )
+
+
+@frozen
+class ChordMelody(MusicalElement):
+    chord_progression: ChordProgression
+    arpeggio: Arpeggio
+    rhythm: Rhythm
+
+    def _default_name(self) -> str:
+        return (
+            f"chord_progression_{self.chord_progression.name}_"
+            f"arpeggio_{self.arpeggio.name}_rhythm_{self.rhythm.name}"
+        )
+
+    def __iter__(self) -> Iterator[Note]:
+        for melody in (
+            Melody(
+                name=f"chord_{chord_type}_arpeggio_{self.arpeggio.name}_rhythm_{self.rhythm.name}",
+                pitch_progression=transpose(
+                    self.arpeggio(Chord(typ=chord_type)), relative_pitch
+                ),
+                rhythm=self.rhythm,
+            )
+            for relative_pitch, chord_type in self.chord_progression
+        ):
+            yield from melody
