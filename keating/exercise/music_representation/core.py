@@ -1,9 +1,11 @@
 """ Core musical structures"""
 
-from typing import Set, Tuple, NamedTuple
+from abc import abstractmethod
+from typing import Optional, Set, Tuple, NamedTuple
 from fractions import Fraction
 from enum import Enum
 
+from attrs import frozen, field
 
 Pitch = int
 RelativePitch = int
@@ -14,6 +16,10 @@ OCTAVE = 12
 class Mode(Enum):
     MAJOR = "maj"
     MINOR = "min"
+
+
+def meter(numerator: int, denominator: int) -> Fraction:
+    return Fraction(numerator, denominator, _normalize=False)
 
 
 class Modifier(Enum):
@@ -62,3 +68,24 @@ class NoteHarmony(NamedTuple):
             + f"_pos_{self.spacement.position}"
             + f"_dur_{self.spacement.duration}"
         )
+
+
+@frozen
+class MusicalElement:
+
+    _name: Optional[str] = field(default=None, kw_only=True)
+    _difficulty: Optional[int] = field(default=None, kw_only=True)
+
+    @property
+    def element_type(self) -> str:
+        return self.__class__.__name__
+
+    @property
+    def name(self) -> str:
+        if self._name:
+            return self._name
+        return self._default_name()
+
+    @abstractmethod
+    def _default_name(self) -> str:
+        """Define default name for musical element."""
