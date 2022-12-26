@@ -139,3 +139,21 @@ class PitchSequenceArpeggio(Arpeggio):
 
     def _default_name(self) -> str:
         return "-".join(map(str, self.pitch_idx_sequence))
+
+
+@frozen
+class UpDownArpeggio(Arpeggio):
+    def __call__(
+        self,
+        intervals: ChordIntervals,
+        voicing: Optional[ChordVoicing] = None,
+    ) -> PitchProgression:
+        chord = Chord(intervals=intervals, voicing=voicing)
+        chord_pitches = sorted(chord.relative_pitches)
+        return PitchProgression(
+            name=f"chord_{chord.name}_arpeggio_{self.name}",
+            relative_pitches=tuple(chord_pitches + chord_pitches[-2:0:-1]),
+        )
+
+    def _default_name(self) -> str:
+        return "up_down"
