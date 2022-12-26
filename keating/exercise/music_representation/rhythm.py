@@ -6,7 +6,7 @@ from fractions import Fraction
 
 from attrs import frozen
 
-from exercise.music_representation.core import (
+from exercise.music_representation.base import (
     Spacement,
     MusicalElement,
 )

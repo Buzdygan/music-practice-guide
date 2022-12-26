@@ -5,7 +5,7 @@ from typing import (
 
 from attrs import frozen
 
-from exercise.music_representation.core import (
+from exercise.music_representation.base import (
     RelativePitch,
     MusicalElement,
     OCTAVE,

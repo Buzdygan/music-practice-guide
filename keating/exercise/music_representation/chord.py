@@ -1,4 +1,5 @@
 from typing import (
+    Optional,
     Tuple,
     Set,
     Mapping,
@@ -9,7 +10,7 @@ from abc import abstractmethod
 from collections import defaultdict
 from attrs import frozen, field
 
-from exercise.music_representation.core import (
+from exercise.music_representation.base import (
     RelativePitch,
     Mode,
     MusicalElement,
@@ -20,11 +21,20 @@ from exercise.music_representation.pitch import PitchProgression
 
 
 @frozen
-class ChordType(MusicalElement):
+class ChordIntervals(MusicalElement):
     intervals: Set[RelativePitch]
 
     def _default_name(self) -> str:
         return "-".join(map(str, sorted(self.intervals)))
+
+    def __iter__(self) -> Iterator[RelativePitch]:
+        return iter(sorted(self.intervals))
+
+    def __attrs_post_init__(self) -> None:
+        # asserts that there are no duplicates among intervals (with respect to the octave)
+        assert len(self.intervals) == len(
+            set(interval % OCTAVE for interval in self.intervals)
+        ), f"ChordIntervals {self.name} has duplicate intervals"
 
 
 @frozen
@@ -50,43 +60,51 @@ DEFAULT_VOICING = ChordVoicing(name="default")
 
 @frozen
 class Chord(MusicalElement):
-    typ: ChordType
-    voicing: ChordVoicing = DEFAULT_VOICING
+    intervals: ChordIntervals
+    _voicing: Optional[ChordVoicing] = None
+
+    @property
+    def voicing(self) -> ChordVoicing:
+        return self._voicing or DEFAULT_VOICING
 
     @property
     def relative_pitches(self) -> Set[RelativePitch]:
         return {
             relative_pitch + octave_shift * OCTAVE
-            for interval_idx, relative_pitch in enumerate(sorted(self.typ.intervals))
+            for interval_idx, relative_pitch in enumerate(self.intervals)
             for octave_shift in self.voicing.interval_shifts[interval_idx]
         }
 
     def _default_name(self) -> str:
-        return f"type_{self.typ.name}_voicing_{self.voicing.name}"
+        return f"type_{self.intervals.name}_voicing_{self.voicing.name}"
 
 
 @frozen
 class ChordProgression(MusicalElement):
     mode: Mode
-    chords: Tuple[Tuple[RelativePitch, ChordType], ...]
+    chords: Tuple[Tuple[RelativePitch, ChordIntervals], ...]
 
     def _default_name(self) -> str:
         return (
             self.mode.value
             + "_"
             + "-".join(
-                f"{to_roman_numeral(pitch + 1)}{chord_type}"
-                for pitch, chord_type in self.chords
+                f"{to_roman_numeral(pitch + 1)}{intervals}"
+                for pitch, intervals in self.chords
             )
         )
 
-    def __iter__(self) -> Iterator[Tuple[RelativePitch, ChordType]]:
+    def __iter__(self) -> Iterator[Tuple[RelativePitch, ChordIntervals]]:
         yield from self.chords
 
 
 class Arpeggio(MusicalElement):
     @abstractmethod
-    def __call__(self, chord: Chord) -> PitchProgression:
+    def __call__(
+        self,
+        intervals: ChordIntervals,
+        voicing: Optional[ChordVoicing] = None,
+    ) -> PitchProgression:
         """Arpeggiate chord."""
 
     def _default_name(self) -> str:
@@ -95,9 +113,14 @@ class Arpeggio(MusicalElement):
 
 @frozen
 class PitchSequenceArpeggio(Arpeggio):
-    pitch_idx_sequence: Tuple[RelativePitch, ...]
+    pitch_idx_sequence: Tuple[int, ...]
 
-    def __call__(self, chord: Chord) -> PitchProgression:
+    def __call__(
+        self,
+        intervals: ChordIntervals,
+        voicing: Optional[ChordVoicing] = None,
+    ) -> PitchProgression:
+        chord = Chord(intervals=intervals, voicing=voicing)
         assert all(
             pitch >= 0 for pitch in self.pitch_idx_sequence
         ), f"Arpeggio {self.name} has negative pitch idx in pitch_idx_sequence"

@@ -7,14 +7,14 @@ from typing import (
 
 from attrs import frozen
 
-from exercise.music_representation.core import (
+from exercise.music_representation.base import (
     Note,
     MusicalElement,
 )
 from exercise.music_representation.pitch import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
 from exercise.music_representation.utils.spacements import multiply_spacements
-from exercise.music_representation.chord import Chord, ChordProgression, Arpeggio
+from exercise.music_representation.chord import ChordProgression, Arpeggio
 
 
 @frozen
@@ -57,12 +57,12 @@ class ChordMelody(MusicalElement):
     def __iter__(self) -> Iterator[Note]:
         for melody in (
             Melody(
-                name=f"chord_{chord_type}_arpeggio_{self.arpeggio.name}_rhythm_{self.rhythm.name}",
-                pitch_progression=self.arpeggio(Chord(typ=chord_type)).transpose(
+                name=f"chord_{intervals}_arpeggio_{self.arpeggio.name}_rhythm_{self.rhythm.name}",
+                pitch_progression=self.arpeggio(intervals=intervals).transpose(
                     shift=shift
                 ),
                 rhythm=self.rhythm,
             )
-            for shift, chord_type in self.chord_progression
+            for shift, intervals in self.chord_progression
         ):
             yield from melody

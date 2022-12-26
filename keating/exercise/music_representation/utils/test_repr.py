@@ -1,4 +1,4 @@
-from keating.exercise.music_representation.utils.repr import to_roman_numeral
+from exercise.music_representation.utils.repr import to_roman_numeral
 
 
 def test_to_roman_numeral():

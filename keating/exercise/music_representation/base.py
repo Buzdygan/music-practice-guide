@@ -1,7 +1,7 @@
 """ Core musical structures"""
 
 from abc import abstractmethod
-from typing import Optional, Set, Tuple, NamedTuple
+from typing import Optional, Protocol, Set, Tuple, NamedTuple
 from fractions import Fraction
 from enum import Enum
 
@@ -62,7 +62,7 @@ class NoteHarmony(NamedTuple):
     spacement: Spacement
     modifiers: Tuple[Modifier, ...] = ()
 
-    def __repr(self) -> str:
+    def __repr__(self) -> str:
         return (
             f"pitches_{'-'.join(map(str, sorted(self.relative_pitches)))}"
             + f"_pos_{self.spacement.position}"
@@ -89,3 +89,9 @@ class MusicalElement:
     @abstractmethod
     def _default_name(self) -> str:
         """Define default name for musical element."""
+
+
+class PieceLike(Protocol):
+    @property
+    def notes(self) -> Tuple[Note]:
+        ...

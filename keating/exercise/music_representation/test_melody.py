@@ -1,6 +1,6 @@
 from fractions import Fraction
 
-from exercise.music_representation.core import Note, Spacement, meter
+from exercise.music_representation.base import Note, Spacement, meter
 from exercise.music_representation.utils.spacements import (
     EIGHTH,
     QUARTER,

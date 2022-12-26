@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import List, Tuple
 
-from exercise.music_representation.core import Spacement
+from exercise.music_representation.base import Spacement
 
 
 SIXTEENTH = Fraction(1, 16)
@@ -33,7 +33,7 @@ def rhytmic_line(durations: Tuple[Fraction, ...]) -> Tuple[Spacement, ...]:
 
 
 def get_spacements_duration(spacements: Tuple[Spacement, ...]) -> Fraction:
-    return sum(spacement.duration for spacement in spacements)
+    return Fraction(sum(spacement.duration for spacement in spacements))
 
 
 def multiply_spacements(
