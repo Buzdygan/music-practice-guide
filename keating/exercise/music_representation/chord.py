@@ -66,27 +66,6 @@ class ChordVoicing(MusicalElement):
 DEFAULT_VOICING = ChordVoicing(name="default")
 
 
-# @frozen
-# class Chord(MusicalElement):
-#     intervals: Chord
-#     _voicing: Optional[ChordVoicing] = None
-
-#     @property
-#     def voicing(self) -> ChordVoicing:
-#         return self._voicing or DEFAULT_VOICING
-
-#     @property
-#     def relative_pitches(self) -> Set[RelativePitch]:
-#         return {
-#             relative_pitch + octave_shift * OCTAVE
-#             for interval_idx, relative_pitch in enumerate(self.intervals)
-#             for octave_shift in self.voicing.interval_shifts[interval_idx]
-#         }
-
-#     def _default_name(self) -> str:
-#         return f"type_{self.intervals.name}_voicing_{self.voicing.name}"
-
-
 @frozen
 class ChordProgression(MusicalElement):
     mode: Mode
