@@ -9,6 +9,8 @@ from attrs import frozen, field
 
 Pitch = int
 RelativePitch = int
+IntervalSet = Set[RelativePitch]
+IntervalSequence = Tuple[RelativePitch, ...]
 
 OCTAVE = 12
 
