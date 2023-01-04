@@ -1,12 +1,19 @@
 from attrs import frozen
 
-from typing import Tuple
+from typing import Set
 from exercise.skills.base import Skill
-from exercise.music_representation.base import PieceLike
+from exercise.music_representation.base import Key, PieceLike
 
 
 @frozen
 class Exercise:
     exercise_id: str
     piece: PieceLike
-    skills: Tuple[Skill]
+    skills: Set[Skill]
+
+
+@frozen
+class ExercisePractice:
+    exercise: Exercise
+    key: Key
+    tempo: int

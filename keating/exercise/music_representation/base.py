@@ -7,6 +7,8 @@ from enum import Enum
 
 from attrs import frozen, field
 
+from exercise.skills.base import Skill
+
 Pitch = int
 RelativePitch = int
 IntervalSet = Set[RelativePitch]
@@ -95,5 +97,13 @@ class MusicalElement:
 
 class PieceLike(Protocol):
     @property
-    def notes(self) -> Tuple[Note]:
+    def notes(self) -> Tuple[Note, ...]:
+        ...
+
+    @property
+    def skills(self) -> Set[Skill]:
+        ...
+
+    @property
+    def piece_id(self) -> str:
         ...
