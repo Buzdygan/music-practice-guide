@@ -1,7 +1,8 @@
+from enum import Enum
 from attrs import frozen
 
 from typing import Set
-from exercise.skills.base import Skill
+from exercise.skill import Skill
 from exercise.music_representation.base import Key, PieceLike
 
 
@@ -17,3 +18,8 @@ class ExercisePractice:
     exercise: Exercise
     key: Key
     tempo: int
+
+
+class Hand(Enum):
+    LEFT = 1
+    RIGHT = 2

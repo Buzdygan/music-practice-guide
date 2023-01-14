@@ -2,12 +2,13 @@ from typing import Tuple
 
 from attrs import frozen
 
-from exercise.base import Exercise, ExercisePractice
-from exercise.generators.base import MusicalElementFilter
+from exercise.base import Exercise, ExercisePractice, Hand
+from exercise.generators.exercise_factory import MusicalElementFilter
 from exercise.music_representation.base import Key, MusicalElement, PieceLike
 from exercise.music_representation.piece import BothHandsPiece
+from exercise.music_representation.rhythm import Rhythm
 from exercise.practice_log import PracticeLog
-from exercise.skills.base import Skill
+from exercise.skill import Skill
 
 
 def choose_left_hand_piece(
@@ -25,7 +26,7 @@ def choose_right_hand_piece(
     raise NotImplementedError
 
 
-def choose_key(practice_log: PracticeLog) -> Key:
+def choose_key(piece: PieceLike, practice_log: PracticeLog) -> Key:
     raise NotImplementedError
 
 
@@ -48,6 +49,9 @@ class HandCoordinationSkill(Skill):
 
 
 class HandCoordinationExerciseGenerator:
+    def __init__(self, practice_log: PracticeLog) -> None:
+        self._practice_log = practice_log
+
     @property
     def musical_elements_query(self) -> Tuple[Tuple[type, MusicalElementFilter], ...]:
         return ()
@@ -56,15 +60,15 @@ class HandCoordinationExerciseGenerator:
         self, practice_log: PracticeLog, musical_elements: Tuple[MusicalElement, ...]
     ) -> ExercisePractice:
 
-        left_hand_piece = choose_left_hand_piece(
-            practice_log=practice_log,
-            musical_elements=musical_elements,
+        left_rhythm, right_rhythm = self.choose_rhythm_pair()
+        left_hand_piece = self.choose_piece_from_rhythm(
+            rhythm=left_rhythm,
+            hand=Hand.LEFT,
         )
 
-        right_hand_piece = choose_right_hand_piece(
-            practice_log=practice_log,
-            musical_elements=musical_elements,
-            left_hand_piece=left_hand_piece,
+        right_hand_piece = self.choose_piece_from_rhythm(
+            rhythm=right_rhythm,
+            hand=Hand.RIGHT,
         )
 
         piece = BothHandsPiece(
@@ -87,6 +91,12 @@ class HandCoordinationExerciseGenerator:
 
         return ExercisePractice(
             exercise=exercise,
-            key=choose_key(practice_log=practice_log),
+            key=choose_key(piece=piece, practice_log=practice_log),
             tempo=choose_tempo(piece=piece, practice_log=practice_log),
         )
+
+    def choose_rhythm_pair(self) -> Tuple[Rhythm, Rhythm]:
+        raise NotImplementedError
+
+    def choose_piece_from_rhythm(self, rhythm: Rhythm, hand: Hand) -> PieceLike:
+        raise NotImplementedError
