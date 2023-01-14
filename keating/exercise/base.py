@@ -1,8 +1,6 @@
 from enum import Enum
 from attrs import frozen
 
-from typing import Set
-from exercise.skill import Skill
 from exercise.music_representation.base import Key, PieceLike
 
 
@@ -10,7 +8,6 @@ from exercise.music_representation.base import Key, PieceLike
 class Exercise:
     exercise_id: str
     piece: PieceLike
-    skills: Set[Skill]
 
 
 @frozen

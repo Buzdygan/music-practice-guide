@@ -1,5 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from enum import Enum
 from typing import List
+
+from attrs import frozen
+
+from exercise.base import ExercisePractice
 
 
 class PracticeSession:
@@ -20,6 +25,21 @@ class PracticeSession:
 
     def get_duration_seconds(self) -> int:
         return int(self.get_duration().total_seconds())
+
+
+class PracticeResult(Enum):
+    TOO_EASY = 1
+    COMPLETED = 2
+    ALMOST_COMPLETED = 3
+    HARD = 4
+    TOO_HARD = 5
+
+
+@frozen
+class ExercisePracticeLog:
+    exercise_practice: ExercisePractice
+    practice_date: date
+    result: PracticeResult
 
 
 class PracticeLog:
@@ -60,3 +80,9 @@ class PracticeLog:
     def get_for_user(cls, user_id: str) -> "PracticeLog":
         """Get the practice log for the user."""
         return cls(user_id=user_id).load()
+
+    def get_exercise_practice_logs(
+        self, generator_id: str
+    ) -> List[ExercisePracticeLog]:
+        """Get exercise practice logs for the generator."""
+        raise NotImplementedError
