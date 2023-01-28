@@ -7,7 +7,7 @@ from enum import Enum
 
 from attrs import frozen, field
 
-from exercise.skills.base import Skill
+from exercise.skill import Skill
 
 Pitch = int
 RelativePitch = int
@@ -106,4 +106,8 @@ class PieceLike(Protocol):
 
     @property
     def piece_id(self) -> str:
+        ...
+
+    @property
+    def musical_elements(self) -> Tuple[MusicalElement, ...]:
         ...

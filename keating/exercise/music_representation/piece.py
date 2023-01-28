@@ -2,7 +2,7 @@ from typing import Set, Tuple
 from attrs import frozen
 
 from exercise.music_representation.base import Note, PieceLike
-from exercise.skills.base import Skill
+from exercise.skill import Skill
 
 
 @frozen
