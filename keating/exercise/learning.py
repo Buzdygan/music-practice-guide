@@ -1,15 +1,18 @@
+from datetime import date
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from attrs import frozen
 
 from exercise.base import Exercise, ExercisePractice
 from exercise.music_representation.base import Key
-from exercise.practice_log import ExercisePracticeLog, PracticeLog
+from exercise.practice_log import ExercisePracticeLog, PracticeResult
 from exercise.familiarity import Familiarity, Level
 
 
 START_TEMPO = 50
 TEMPO_STEP = 5
+KEY_FORGET_FACTOR = 1 / 30
+NUM_EXERCISES_TO_IMPROVE = 3
 
 
 @frozen
@@ -33,14 +36,39 @@ class Difficulty:
         return self.point > other.point
 
 
-# TODO
-def get_key_practice_order(practice_log: PracticeLog) -> Tuple[Key, ...]:
-    raise NotImplementedError
+def get_key_practice_order(
+    practice_logs: Iterable[ExercisePracticeLog],
+) -> Tuple[Key, ...]:
+    today = date.today()
+    key_familiarity_score: Dict[Key, float] = {key: 0.0 for key in Key}
+    for practice_log in sorted(
+        practice_logs, key=lambda log: log.practice_date, reverse=True
+    ):
+        score = 1.0 - (today - practice_log.practice_date).days * KEY_FORGET_FACTOR
+        if score <= 0:
+            break
+        key_familiarity_score[practice_log.exercise_practice.key] += score
+    return tuple(
+        (key for key, _ in sorted(key_familiarity_score.items(), key=lambda x: x[1]))
+    )
 
 
-# TODO
 def is_ready_for_new_exercise(practice_logs: Iterable[ExercisePracticeLog]) -> bool:
-    raise NotImplementedError
+    exercise_to_last_result: Dict[Exercise, PracticeResult] = {}
+    num_almost_completed = 0
+    for practice_log in sorted(
+        practice_logs, key=lambda log: log.practice_date, reverse=True
+    ):
+        if practice_log.exercise_practice.exercise in exercise_to_last_result:
+            continue
+        if practice_log.result == PracticeResult.HARD:
+            return False
+        if practice_log.result == PracticeResult.ALMOST_COMPLETED:
+            num_almost_completed += 1
+        exercise_to_last_result[
+            practice_log.exercise_practice.exercise
+        ] = practice_log.result
+    return num_almost_completed < NUM_EXERCISES_TO_IMPROVE
 
 
 def get_exercise_to_improve(

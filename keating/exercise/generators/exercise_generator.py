@@ -38,7 +38,9 @@ class ExerciseGenerator(ABC):
                 key=lambda log: log.exercise_practice.exercise,
             )
         }
-        self._key_practice_order = get_key_practice_order(practice_log=practice_log)
+        self._key_practice_order = get_key_practice_order(
+            practice_logs=practice_log.get_practice_logs()
+        )
 
     @abstractproperty
     def exercises(self) -> Dict[Exercise, Difficulty]:
