@@ -1,8 +1,21 @@
-from typing import Set, Tuple
+from typing import Protocol, Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import Note, PieceLike
-from exercise.skill import Skill
+from exercise.music_representation.base import MusicalElement, Note
+
+
+class PieceLike(Protocol):
+    @property
+    def notes(self) -> Tuple[Note, ...]:
+        ...
+
+    @property
+    def piece_id(self) -> str:
+        ...
+
+    @property
+    def musical_elements(self) -> Tuple[MusicalElement, ...]:
+        ...
 
 
 @frozen
@@ -13,10 +26,6 @@ class BothHandsPiece:
     @property
     def notes(self) -> Tuple[Note, ...]:
         return self.left_hand.notes + self.right_hand.notes
-
-    @property
-    def skills(self) -> Set[Skill]:
-        return {*self.left_hand.skills, *self.right_hand.skills}
 
     @property
     def piece_id(self) -> str:

@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from functools import total_ordering
 
 from attrs import frozen
 
@@ -15,6 +16,7 @@ KEY_FORGET_FACTOR = 1 / 30
 NUM_EXERCISES_TO_IMPROVE = 3
 
 
+@total_ordering
 @frozen
 class Difficulty:
     point: Tuple[float, ...]
@@ -23,17 +25,19 @@ class Difficulty:
     def level(self) -> float:
         return sum(x**2 for x in self.point) ** 0.5
 
-    def __lte__(self, other: "Difficulty") -> bool:
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Difficulty):
+            return False
         assert len(self.point) == len(
             other.point
         ), "Can't compare difficulties of different size"
-        return self.point <= other.point
+        return self.point == other.point
 
-    def __gt__(self, other: "Difficulty") -> bool:
+    def __lt__(self, other: "Difficulty") -> bool:
         assert len(self.point) == len(
             other.point
         ), "Can't compare difficulties of different size"
-        return self.point > other.point
+        return self.point < other.point
 
 
 def get_key_practice_order(

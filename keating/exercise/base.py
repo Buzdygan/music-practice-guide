@@ -2,7 +2,8 @@ from enum import Enum
 from typing import Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import Key, MusicalElement, Note, PieceLike
+from exercise.music_representation.base import Key, MusicalElement, Note
+from exercise.music_representation.piece import PieceLike
 
 
 @frozen

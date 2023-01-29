@@ -1,13 +1,12 @@
 """ Core musical structures"""
 
 from abc import abstractmethod
-from typing import Optional, Protocol, Set, Tuple, NamedTuple
+from typing import Optional, Set, Tuple, NamedTuple
 from fractions import Fraction
 from enum import Enum
 
 from attrs import frozen, field
 
-from exercise.skill import Skill
 
 Pitch = int
 RelativePitch = int
@@ -93,21 +92,3 @@ class MusicalElement:
     @abstractmethod
     def _default_name(self) -> str:
         """Define default name for musical element."""
-
-
-class PieceLike(Protocol):
-    @property
-    def notes(self) -> Tuple[Note, ...]:
-        ...
-
-    @property
-    def skills(self) -> Set[Skill]:
-        ...
-
-    @property
-    def piece_id(self) -> str:
-        ...
-
-    @property
-    def musical_elements(self) -> Tuple[MusicalElement, ...]:
-        ...
