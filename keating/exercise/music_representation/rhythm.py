@@ -11,6 +11,9 @@ from exercise.music_representation.base import (
     MusicalElement,
 )
 
+METER_4_4 = Fraction(4, 4, _normalize=False)
+METER_3_4 = Fraction(3, 4, _normalize=False)
+
 
 @frozen
 class Rhythm(MusicalElement):

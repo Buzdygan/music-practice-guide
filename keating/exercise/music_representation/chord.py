@@ -49,6 +49,10 @@ class ChordVoicing(MusicalElement):
             interval_shifts[interval] = shifts
         return interval_shifts
 
+    @classmethod
+    def default(cls) -> "ChordVoicing":
+        return cls(name="default_voicing")
+
     def _default_name(self) -> str:
         return "-".join(
             f"{pitch}_{'-'.join(map(str, sorted(shifts)))}"
@@ -61,9 +65,6 @@ class ChordVoicing(MusicalElement):
             for interval_idx, relative_pitch in enumerate(chord)
             for octave_shift in self.interval_shifts[interval_idx]
         }
-
-
-DEFAULT_VOICING = ChordVoicing(name="default")
 
 
 @frozen
@@ -92,6 +93,8 @@ class Arpeggio(MusicalElement):
         voicing: Optional[ChordVoicing] = None,
     ) -> PitchProgression:
         """Arpeggiate chord."""
+        if voicing is None:
+            voicing = ChordVoicing.default()
         return PitchProgression(
             name=f"chord_{chord.name}_arpeggio_{self.name}",
             relative_pitches=self._arpeggiate(
@@ -100,6 +103,10 @@ class Arpeggio(MusicalElement):
                 )
             ),
         )
+
+    @classmethod
+    def default(cls) -> "Arpeggio":
+        return cls(name="default_arpeggio")
 
     def _arpeggiate(self, sorted_intervals: IntervalSequence) -> IntervalSequence:
         """Arpeggiate chord intervals"""

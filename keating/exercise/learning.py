@@ -1,5 +1,69 @@
+"""
+Principles of learning path.
+
+One main challenge is to gradually expand set of exercises to include more and more musical
+elements. Not all of them should be practiced at the same time, because it would be too
+thinly spread. So we need to have some kind of prioritization.
+
+Maybe we don't need different piece generators (like hand coordination, chord progression, etc)
+but instead, we have one big piece library, and we can choose which pieces to practice from it
+based on the skill we want to emphasise.
+
+So the difference will be in the selection of pieces, not in the generation of pieces.
+
+Some examples:
+    - hand coordination: choose pieces based mainly on the rhythms of both hands
+    - chord progression: choose pieces based on the chord progressions included in them
+
+Two main factors of choosing exercise will be:
+    - difficulty level
+    - musical elements practiced in the exercise.
+
+So we will need Piece -> Set[Skill] mapping, where Skill is corresponding to the exercise generator.
+Or maybe we can have one generator which is parametrized with the set of skills it should practice.
+
+Or sth like ChordSkill.from_piece(Piece) -> ChordSkill.
+
+
+What main factors influence the difficulty of the exercise?
+    - tempo
+    - hand coordination difficulty
+    - knowledge of particular musical elements (chords, scales, etc)
+    - 
+
+
+MusicalElement.choose_for_level(user_practice_log, level) -> MusicalElement
+
+
+Topics:
+    Hand coordination:
+        - Left Rhythm
+            1. Choose left hand rhythm
+            2. Choose left pitch progression
+            3. Choose right hand rhythm
+            4. Choose right pitch progression
+        - Right Rhythm
+            Same as above, but with right hand rhythm first
+
+    Musical knowledge:
+        - Chord Progression
+            1. Choose chord progression
+            2. Choose chord voicings
+            3. 
+        - Chord
+        - Scale
+        - Key
+
+    Dexterity:
+        - Speed
+        - Hand movement
+ 
+"""
+
+
 from datetime import date
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from itertools import chain
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from functools import total_ordering
 
 from attrs import frozen
@@ -19,25 +83,44 @@ NUM_EXERCISES_TO_IMPROVE = 3
 @total_ordering
 @frozen
 class Difficulty:
-    point: Tuple[float, ...]
+    sub_difficulties: Dict[str, Union[float, "Difficulty"]]
+
+    @property
+    def point(self) -> Tuple[float, ...]:
+        return tuple(
+            chain(
+                *(
+                    (difficulty,) if isinstance(difficulty, float) else difficulty.point
+                    for _, difficulty in sorted(self.sub_difficulties.items())
+                )
+            )
+        )
 
     @property
     def level(self) -> float:
         return sum(x**2 for x in self.point) ** 0.5
 
-    def __eq__(self, other: Any) -> bool:
+    def _assert_is_comparable(self, other: Any) -> None:
         if not isinstance(other, Difficulty):
-            return False
-        assert len(self.point) == len(
-            other.point
-        ), "Can't compare difficulties of different size"
-        return self.point == other.point
+            raise ValueError("Can't compare difficulty with other type")
 
-    def __lt__(self, other: "Difficulty") -> bool:
-        assert len(self.point) == len(
-            other.point
-        ), "Can't compare difficulties of different size"
-        return self.point < other.point
+        if set(self.sub_difficulties) != set(other.sub_difficulties):
+            raise ValueError("Can't compare difficulties of different keys")
+
+    def __eq__(self, other: Any) -> bool:
+        self._assert_is_comparable(other=other)
+        for key, value in self.sub_difficulties.items():
+            if value != other.sub_difficulties[key]:
+                return False
+
+        return True
+
+    def __lt__(self, other: Any) -> bool:
+        self._assert_is_comparable(other=other)
+        for key, value in self.sub_difficulties.items():
+            if value >= other.sub_difficulties[key]:
+                return False
+        return True
 
 
 def get_key_practice_order(
@@ -105,35 +188,32 @@ def get_exercise_to_improve(
 
 
 def choose_new_exercise(
-    exercise_to_difficulty: Dict[Exercise, Difficulty],
+    exercises_with_difficulty: Iterator[Tuple[Exercise, Difficulty]],
     familiar_exercises: Set[Exercise],
 ) -> Optional[Exercise]:
-    familiar_difficulties = {
-        exercise_to_difficulty[exercise] for exercise in familiar_exercises
-    }
-
+    familiar_difficulties: Set[Difficulty] = set()
+    pool_difficulties: Set[Difficulty] = set()
     exercise_pool: List[Exercise] = []
-    for exercise in sorted(
-        exercise_to_difficulty, key=lambda exc: exercise_to_difficulty[exc].level
-    ):
+    for exercise, difficulty in exercises_with_difficulty:
         # We already know this exercise, skip
         if exercise in familiar_exercises:
+            familiar_difficulties.add(difficulty)
             continue
 
-        # This is harder than what we already have in the pool
+        # This is harder than what we already have in the pool, we can stop
         if any(
-            exercise_to_difficulty[exercise]
-            > exercise_to_difficulty[exercise_from_pool]
-            for exercise_from_pool in exercise_pool
+            difficulty > difficulty_from_pool
+            for difficulty_from_pool in pool_difficulties
         ):
-            continue
+            break
 
         # This is not easier than what is already known, add to the pool.
         if not any(
-            exercise_to_difficulty[exercise] <= difficulty
-            for difficulty in familiar_difficulties
+            difficulty <= familiar_difficulty
+            for familiar_difficulty in familiar_difficulties
         ):
             exercise_pool.append(exercise)
+            pool_difficulties.add(difficulty)
 
     if not exercise_pool:
         return None

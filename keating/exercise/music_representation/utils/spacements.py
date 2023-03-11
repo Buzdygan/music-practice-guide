@@ -4,13 +4,6 @@ from typing import List, Tuple
 from exercise.music_representation.base import Spacement
 
 
-SIXTEENTH = Fraction(1, 16)
-EIGHTH = Fraction(1, 8)
-QUARTER = Fraction(1, 4)
-SEMI = Fraction(1, 2)
-WHOLE = Fraction(1, 1)
-
-
 def dot(duration: Fraction) -> Fraction:
     return duration + duration / 2
 
@@ -21,6 +14,16 @@ def triplet(duration: Fraction) -> Fraction:
 
 def dotted_triplet(duration: Fraction) -> Fraction:
     return triplet(dot(duration))
+
+
+WHOLE = Fraction(1, 1)
+SEMI = Fraction(1, 2)
+QUARTER = Fraction(1, 4)
+EIGHTH = Fraction(1, 8)
+SIXTEENTH = Fraction(1, 16)
+
+QUARTER_TRIPLET = triplet(SEMI)
+EIGHTH_TRIPLET = triplet(QUARTER)
 
 
 def rhytmic_line(durations: Tuple[Fraction, ...]) -> Tuple[Spacement, ...]:
@@ -48,3 +51,15 @@ def multiply_spacements(
         for idx in range(factor)
         for spacement in spacements
     )
+
+
+def extend_to_full_measure(
+    spacements: Tuple[Spacement, ...], meter: Fraction
+) -> Tuple[Spacement, ...]:
+    spacements_duration = get_spacements_duration(spacements)
+
+    if spacements_duration == meter:
+        return spacements
+
+    mult = meter / spacements_duration
+    return multiply_spacements(spacements, int(mult * mult.denominator))

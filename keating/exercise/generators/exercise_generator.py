@@ -1,7 +1,7 @@
 """ Exercise generators. """
 
-from abc import ABC, abstractproperty
-from typing import Dict, Optional
+from abc import ABC
+from typing import Iterator, Optional, Protocol, Tuple
 
 from logging import warning
 
@@ -20,11 +20,21 @@ from exercise.utils import group_by
 from exercise.familiarity import Familiarity, Level
 
 
-class ExerciseGenerator(ABC):
+class PieceGeneratorLike(Protocol):
     generator_id: str
 
-    def __init__(self, practice_log: PracticeLog) -> None:
+    def pieces(self) -> Iterator[Tuple[PieceLike, Difficulty]]:
+        ...
+
+
+class ExerciseGenerator(ABC):
+    def __init__(
+        self,
+        practice_log: PracticeLog,
+        piece_generator: PieceGeneratorLike,
+    ) -> None:
         self._practice_log = practice_log
+        self._piece_generator = piece_generator
         all_exercise_ids = {exercise.exercise_id for exercise in self.exercises}
         self._generator_practice_logs = [
             practice_log
@@ -42,12 +52,15 @@ class ExerciseGenerator(ABC):
             practice_logs=practice_log.get_practice_logs()
         )
 
-    @abstractproperty
-    def exercises(self) -> Dict[Exercise, Difficulty]:
-        ...
+    @property
+    def generator_id(self) -> str:
+        return self._piece_generator.generator_id
 
-    def get_exercise_id(self, piece: PieceLike) -> str:
-        return f"{self.generator_id}_{piece.piece_id}"
+    def exercises(self) -> Iterator[Tuple[Exercise, Difficulty]]:
+        for piece, difficulty in self._piece_generator.pieces:
+            yield Exercise(
+                exercise_id=f"{self.generator_id}_{piece.piece_id}", piece=piece
+            ), difficulty
 
     def generate(self) -> ExercisePractice:
         if is_ready_for_new_exercise(practice_logs=self._generator_practice_logs):
@@ -64,7 +77,7 @@ class ExerciseGenerator(ABC):
 
     def _get_new_exercise(self) -> Optional[ExercisePractice]:
         exercise = choose_new_exercise(
-            exercise_to_difficulty=self.exercises,
+            exercises_with_difficulty=self.exercises(),
             familiar_exercises=set(
                 exercise
                 for exercise, familiarity in self._exercise_to_familiarity.items()
