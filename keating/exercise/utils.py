@@ -1,5 +1,9 @@
+import math
 from collections import defaultdict
-from typing import Callable, Dict, Iterable
+
+from fractions import Fraction
+from functools import reduce
+from typing import Callable, Dict, Iterable, Sequence
 
 
 def group_by(data: Iterable, key: Callable) -> Dict:
@@ -18,3 +22,21 @@ def group_by(data: Iterable, key: Callable) -> Dict:
     for item in data:
         result[key(item)].append(item)
     return result
+
+
+def gcd(fractions: Sequence[Fraction]) -> Fraction:
+    """Get the greatest common denominator of a list of fractions.
+
+    Args:
+        fractions (list): A list of fractions.
+
+    Returns:
+        Fraction: The greatest common denominator of the list of fractions.
+    """
+
+    def _gcd(a: Fraction, b: Fraction) -> Fraction:
+        return Fraction(
+            math.gcd(a.numerator, b.numerator), math.lcm(a.denominator, b.denominator)
+        )
+
+    return Fraction(reduce(lambda x, y: _gcd(x, y), fractions))

@@ -16,14 +16,14 @@ from exercise.music_representation.utils.spacements import (
 DURATIONS_4_4 = frozenset(
     {
         (WHOLE,),
-        (SEMI,),
-        (QUARTER,),
-        (EIGHTH,),
-        (SIXTEENTH,),
-        (EIGHTH_TRIPLET,),
+        (SEMI,) * 2,
+        (QUARTER,) * 4,
+        (EIGHTH,) * 8,
+        (SIXTEENTH,) * 16,
+        (EIGHTH_TRIPLET,) * 12,
         *set(permutations((QUARTER, QUARTER, SEMI))),
         # swing
-        (QUARTER_TRIPLET, EIGHTH_TRIPLET),
+        (QUARTER_TRIPLET, EIGHTH_TRIPLET) * 4,
         # bossa nova
         (QUARTER, dot(QUARTER), dot(QUARTER)),
     }

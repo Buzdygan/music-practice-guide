@@ -1,7 +1,8 @@
 """ Core musical structures"""
 
 from abc import abstractmethod
-from typing import Optional, Set, Tuple, NamedTuple
+from functools import total_ordering
+from typing import Any, Dict, List, Optional, Set, Tuple, NamedTuple, Union
 from fractions import Fraction
 from enum import Enum
 
@@ -73,11 +74,64 @@ class NoteHarmony(NamedTuple):
         )
 
 
+@total_ordering
+@frozen
+class Difficulty:
+    sub_difficulties: Dict[str, Union[float, "Difficulty"]]
+
+    @property
+    def point(self) -> Tuple[float, ...]:
+        point: List[float] = []
+        for _, difficulty in sorted(self.sub_difficulties.items()):
+            if isinstance(difficulty, self.__class__):
+                point.extend(difficulty.point)
+            elif isinstance(difficulty, float):
+                point.append(difficulty)
+            else:
+                raise ValueError(f"Unknown difficulty type: {type(difficulty)}")
+        return tuple(point)
+
+    @property
+    def level(self) -> float:
+        return sum(x**2 for x in self.point) ** 0.5
+
+    def _assert_is_comparable(self, other: Any) -> None:
+        if not isinstance(other, Difficulty):
+            raise ValueError("Can't compare difficulty with other type")
+
+        if set(self.sub_difficulties) != set(other.sub_difficulties):
+            raise ValueError("Can't compare difficulties of different keys")
+
+    def __hash__(self) -> int:
+        return hash(self.point)
+
+    def __eq__(self, other: Any) -> bool:
+        self._assert_is_comparable(other=other)
+        for key, value in self.sub_difficulties.items():
+            if value != other.sub_difficulties[key]:
+                return False
+
+        return True
+
+    def __lt__(self, other: Any) -> bool:
+        self._assert_is_comparable(other=other)
+        for key, value in self.sub_difficulties.items():
+            if value >= other.sub_difficulties[key]:
+                return False
+        return True
+
+
 @frozen
 class MusicalElement:
 
     _name: Optional[str] = field(default=None, kw_only=True)
-    _difficulty: Optional[int] = field(default=None, kw_only=True)
+    _difficulty: Optional[Difficulty] = field(default=None, kw_only=True)
+
+    @property
+    def difficulty(self) -> Difficulty:
+        if self._difficulty is None:
+            return self._default_difficulty()
+        return self._difficulty
 
     @property
     def element_type(self) -> str:
@@ -92,3 +146,8 @@ class MusicalElement:
     @abstractmethod
     def _default_name(self) -> str:
         """Define default name for musical element."""
+
+    @abstractmethod
+    def _default_difficulty(self) -> Difficulty:
+        """Define default difficulty for musical element."""
+        raise NotImplementedError

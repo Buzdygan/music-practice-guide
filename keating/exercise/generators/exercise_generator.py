@@ -35,7 +35,7 @@ class ExerciseGenerator(ABC):
     ) -> None:
         self._practice_log = practice_log
         self._piece_generator = piece_generator
-        all_exercise_ids = {exercise.exercise_id for exercise in self.exercises}
+        all_exercise_ids = {exercise.exercise_id for exercise, _ in self.exercises()}
         self._generator_practice_logs = [
             practice_log
             for practice_log in self._practice_log.get_practice_logs()
@@ -57,7 +57,7 @@ class ExerciseGenerator(ABC):
         return self._piece_generator.generator_id
 
     def exercises(self) -> Iterator[Tuple[Exercise, Difficulty]]:
-        for piece, difficulty in self._piece_generator.pieces:
+        for piece, difficulty in self._piece_generator.pieces():
             yield Exercise(
                 exercise_id=f"{self.generator_id}_{piece.piece_id}", piece=piece
             ), difficulty

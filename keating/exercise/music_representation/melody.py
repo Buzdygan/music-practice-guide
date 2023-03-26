@@ -3,15 +3,18 @@
 from math import lcm
 from typing import (
     Iterator,
+    Tuple,
 )
 
 from attrs import frozen
 
 from exercise.music_representation.base import (
+    Difficulty,
     Note,
     MusicalElement,
 )
-from exercise.music_representation.pitch import HarmonyProgression, PitchProgression
+from exercise.music_representation.harmony import HarmonyProgression
+from exercise.music_representation.pitch import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
 from exercise.music_representation.utils.spacements import (
     multiply_spacements,
@@ -29,6 +32,26 @@ class Melody(MusicalElement):
     def _default_name(self) -> str:
         return (
             f"pitch_progression_{self.pitch_progression.name}_rhythm_{self.rhythm.name}"
+        )
+
+    @property
+    def piece_id(self) -> str:
+        return self.name
+
+    @property
+    def notes(self) -> Tuple[Note, ...]:
+        return tuple(self)
+
+    @property
+    def musical_elements(self) -> Tuple[MusicalElement, ...]:
+        return (self.pitch_progression, self.rhythm)
+
+    def _default_difficulty(self) -> Difficulty:
+        return Difficulty(
+            sub_difficulties={
+                "pitch_progression": self.pitch_progression.difficulty,
+                "rhythm": self.rhythm.difficulty,
+            }
         )
 
     def __iter__(self) -> Iterator[Note]:

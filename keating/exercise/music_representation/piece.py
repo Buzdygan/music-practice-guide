@@ -32,6 +32,10 @@ class BothHandsPiece:
     def piece_id(self) -> str:
         return f"{self.left_hand.piece_id}_{self.right_hand.piece_id}"
 
+    @property
+    def musical_elements(self) -> Tuple[MusicalElement, ...]:
+        return self.left_hand.musical_elements + self.right_hand.musical_elements
+
 
 class Piece:
     left_line: Optional[HarmonyLine]

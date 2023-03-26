@@ -1,12 +1,16 @@
 from math import lcm
-from typing import Iterator, Optional, Tuple
+from typing import Iterable, Iterator, Optional, Tuple
 
 from exercise.learning import Difficulty
 from exercise.music_representation.melody import Melody
 from exercise.music_representation.piece import BothHandsPiece, PieceLike
 from exercise.music_representation.pitch import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
-from exercise.musical_elements.library import iterate_musical_elements
+from exercise.musical_elements.pitch_progression import (
+    PITCH_PROGRESSIONS,
+    basic_pitch_progressions,
+)
+from exercise.musical_elements.rhythm import RHYTHMS
 
 
 def create_piece_with_difficulty(
@@ -37,7 +41,7 @@ def create_piece_with_difficulty(
 def iterate_matching_rhythms(rhythm: Rhythm) -> Iterator[Rhythm]:
     """Return rhythms in the same meter as given rhythm."""
 
-    for other_rhythm in iterate_musical_elements(musical_element_type=Rhythm):
+    for other_rhythm in sorted(RHYTHMS, key=lambda rhythm: rhythm.difficulty):
         if rhythm.meter == other_rhythm.meter:
             yield other_rhythm
 
@@ -46,13 +50,14 @@ def iterate_matching_pitch_progressions(
     rhythm: Rhythm,
     is_cyclic: bool = True,
     max_repetitions: Optional[int] = None,
-    pitch_progressions: Optional[Iterator[PitchProgression]] = None,
+    pitch_progressions: Optional[Iterable[PitchProgression]] = None,
 ) -> Iterator[PitchProgression]:
     """Return pitch progressions matching given rhythm."""
 
     if pitch_progressions is None:
-        pitch_progressions = iterate_musical_elements(
-            musical_element_type=PitchProgression
+        pitch_progressions = sorted(
+            PITCH_PROGRESSIONS,
+            key=lambda pitch_progression: pitch_progression.difficulty,
         )
 
     for pitch_progression in pitch_progressions:
@@ -69,8 +74,8 @@ def iterate_matching_pitch_progressions(
         yield pitch_progression
 
 
-class HandCoordinationExerciseGenerator:
-    """Exercise generator for hand coordination.
+class HandCoordinationPieceGenerator:
+    """Generator of pieces for practicing hand coordination.
     It will generate the melody for the left hand with increasing difficulty. For each such
     melody, it will have a more limited set of possible melodies for the right hand.
     """
@@ -80,13 +85,14 @@ class HandCoordinationExerciseGenerator:
     def _iterate_left_melodies(self) -> Iterator[Tuple[Rhythm, PitchProgression]]:
         """Iterate over melodies for the left hand."""
 
-        for rhythm in iterate_musical_elements(musical_element_type=Rhythm):
+        for rhythm in sorted(RHYTHMS, key=lambda rhythm: rhythm.difficulty):
             for pitch_progression in iterate_matching_pitch_progressions(rhythm=rhythm):
                 yield rhythm, pitch_progression
 
     def _iterate_right_melodies(
+        self,
         left_hand_rhythm: Rhythm,
-        left_hand_progession: PitchProgression,
+        left_hand_progression: PitchProgression,
     ) -> Iterator[Tuple[Rhythm, PitchProgression]]:
         """Iterate over melodies for the right hand."""
 
@@ -102,18 +108,17 @@ class HandCoordinationExerciseGenerator:
                 yield rhythm, pitch_progression
 
     def pieces(self) -> Iterator[Tuple[PieceLike, Difficulty]]:
-
-        for left_hand_rhythm, left_hand_progession in self._iterate_left_melodies():
+        for left_hand_rhythm, left_hand_progression in self._iterate_left_melodies():
             for (
                 right_hand_rhythm,
-                right_hand_progession,
+                right_hand_progression,
             ) in self._iterate_right_melodies(
                 left_hand_rhythm=left_hand_rhythm,
-                left_hand_progession=left_hand_progession,
+                left_hand_progression=left_hand_progression,
             ):
                 yield create_piece_with_difficulty(
                     left_hand_rhythm=left_hand_rhythm,
-                    left_hand_pitch_progression=left_hand_progession,
+                    left_hand_pitch_progression=left_hand_progression,
                     right_hand_rhythm=right_hand_rhythm,
-                    right_hand_pitch_progression=right_hand_progession,
+                    right_hand_pitch_progression=right_hand_progression,
                 )
