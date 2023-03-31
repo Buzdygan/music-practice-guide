@@ -14,7 +14,7 @@ from exercise.learning import (
     get_exercise_to_improve,
     is_ready_for_new_exercise,
 )
-from exercise.music_representation.piece import PieceLike
+from exercise.music_representation.piece import Piece
 from exercise.practice_log import PracticeLog
 from exercise.utils import group_by
 from exercise.familiarity import Familiarity, Level
@@ -23,7 +23,7 @@ from exercise.familiarity import Familiarity, Level
 class PieceGeneratorLike(Protocol):
     generator_id: str
 
-    def pieces(self) -> Iterator[Tuple[PieceLike, Difficulty]]:
+    def pieces(self) -> Iterator[Tuple[Piece, Difficulty]]:
         ...
 
 

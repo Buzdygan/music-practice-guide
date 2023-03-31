@@ -1,6 +1,6 @@
 from typing import Iterable
 from exercise.music_representation.base import OCTAVE
-from exercise.music_representation.pitch import PitchProgression, Scale
+from exercise.music_representation.pitch_progression import PitchProgression, Scale
 
 
 IONIAN_SCALE = Scale(

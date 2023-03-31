@@ -3,8 +3,8 @@ from typing import Iterable, Iterator, Optional, Tuple
 
 from exercise.learning import Difficulty
 from exercise.music_representation.melody import Melody
-from exercise.music_representation.piece import BothHandsPiece, PieceLike
-from exercise.music_representation.pitch import PitchProgression
+from exercise.music_representation.piece import Piece
+from exercise.music_representation.pitch_progression import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
 from exercise.musical_elements.pitch_progression import (
     PITCH_PROGRESSIONS,
@@ -18,14 +18,14 @@ def create_piece_with_difficulty(
     left_hand_pitch_progression: PitchProgression,
     right_hand_rhythm: Rhythm,
     right_hand_pitch_progression: PitchProgression,
-) -> Tuple[PieceLike, Difficulty]:
+) -> Tuple[Piece, Difficulty]:
     """Create piece with difficulty."""
 
-    return BothHandsPiece(
-        left_hand=Melody(
+    return Piece(
+        left_hand_part=Melody(
             rhythm=left_hand_rhythm, pitch_progression=left_hand_pitch_progression
         ),
-        right_hand=Melody(
+        right_hand_part=Melody(
             rhythm=right_hand_rhythm, pitch_progression=right_hand_pitch_progression
         ),
     ), Difficulty(
@@ -107,7 +107,7 @@ class HandCoordinationPieceGenerator:
             ):
                 yield rhythm, pitch_progression
 
-    def pieces(self) -> Iterator[Tuple[PieceLike, Difficulty]]:
+    def pieces(self) -> Iterator[Tuple[Piece, Difficulty]]:
         for left_hand_rhythm, left_hand_progression in self._iterate_left_melodies():
             for (
                 right_hand_rhythm,

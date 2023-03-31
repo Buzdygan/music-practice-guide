@@ -1,17 +1,21 @@
+from fractions import Fraction
 from typing import Optional, Protocol, Tuple
 from attrs import frozen
 
 from exercise.music_representation.base import MusicalElement, Note
-from exercise.music_representation.melody import HarmonyLine
 
 
-class PieceLike(Protocol):
+class PartLike(Protocol):
+    @property
+    def meter(self) -> Fraction:
+        ...
+
     @property
     def notes(self) -> Tuple[Note, ...]:
         ...
 
     @property
-    def piece_id(self) -> str:
+    def part_id(self) -> str:
         ...
 
     @property
@@ -20,26 +24,43 @@ class PieceLike(Protocol):
 
 
 @frozen
-class BothHandsPiece:
-    left_hand: PieceLike
-    right_hand: PieceLike
+class Piece:
+    left_hand_part: Optional[PartLike] = None
+    right_hand_part: Optional[PartLike] = None
+
+    def __attrs_post_init__(self):
+        if self.left_hand_part is None and self.right_hand_part is None:
+            raise ValueError("Both hands cannot be None")
+
+        if self.left_hand_part is not None and self.right_hand_part is not None:
+            assert self.left_hand_part.meter == self.right_hand_part.meter, (
+                f"Left hand meter {self.left_hand_part.meter} "
+                f"does not match right hand meter {self.right_hand_part.meter}"
+            )
 
     @property
-    def notes(self) -> Tuple[Note, ...]:
-        return self.left_hand.notes + self.right_hand.notes
+    def meter(self) -> Fraction:
+        if self.left_hand_part is not None:
+            return self.left_hand_part.meter
+        return self.right_hand_part.meter  # type: ignore
 
     @property
     def piece_id(self) -> str:
-        return f"{self.left_hand.piece_id}_{self.right_hand.piece_id}"
+        if self.left_hand_part is None:
+            return self.right_hand_part.part_id  # type: ignore
+        if self.right_hand_part is None:
+            return self.left_hand_part.part_id  # type: ignore
+        return f"{self.left_hand_part.part_id}_{self.right_hand_part.part_id}"
 
     @property
     def musical_elements(self) -> Tuple[MusicalElement, ...]:
-        return self.left_hand.musical_elements + self.right_hand.musical_elements
-
-
-class Piece:
-    left_line: Optional[HarmonyLine]
-    right_line: Optional[HarmonyLine]
+        if self.left_hand_part is None:
+            return self.right_hand_part.musical_elements  # type: ignore
+        if self.right_hand_part is None:
+            return self.left_hand_part.musical_elements  # type: ignore
+        return (
+            self.left_hand_part.musical_elements + self.right_hand_part.musical_elements
+        )
 
 
 """

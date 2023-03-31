@@ -1,5 +1,6 @@
 """ Common musical elements."""
 
+from fractions import Fraction
 from math import lcm
 from typing import (
     Iterator,
@@ -14,7 +15,7 @@ from exercise.music_representation.base import (
     MusicalElement,
 )
 from exercise.music_representation.harmony import HarmonyProgression
-from exercise.music_representation.pitch import PitchProgression
+from exercise.music_representation.pitch_progression import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
 from exercise.music_representation.utils.spacements import (
     multiply_spacements,
@@ -35,7 +36,11 @@ class Melody(MusicalElement):
         )
 
     @property
-    def piece_id(self) -> str:
+    def meter(self) -> Fraction:
+        return self.rhythm.meter
+
+    @property
+    def part_id(self) -> str:
         return self.name
 
     @property

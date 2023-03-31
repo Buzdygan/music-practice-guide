@@ -3,7 +3,7 @@ from attr import frozen
 
 from exercise.music_representation.base import IntervalSet, MusicalElement
 from exercise.music_representation.chord import ChordProgression
-from exercise.music_representation.pitch import PitchProgression
+from exercise.music_representation.pitch_progression import PitchProgression
 
 
 @frozen

@@ -18,7 +18,7 @@ from exercise.music_representation.base import (
     OCTAVE,
 )
 from exercise.music_representation.utils.repr import to_roman_numeral
-from exercise.music_representation.pitch import PitchProgression
+from exercise.music_representation.pitch_progression import PitchProgression
 
 
 @frozen

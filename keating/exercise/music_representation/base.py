@@ -8,6 +8,21 @@ from enum import Enum
 
 from attrs import frozen, field
 
+from exercise.music_representation.pitch import (
+    A3,
+    B3,
+    C4,
+    D4,
+    E4,
+    F4,
+    G3,
+    Ais3,
+    Cis4,
+    Dis4,
+    Fis4,
+    Gis3,
+)
+
 
 Pitch = int
 RelativePitch = int
@@ -36,7 +51,18 @@ class _Key(NamedTuple):
 
 
 class Key(Enum):
-    C = _Key(center=0, mode=Mode.MAJOR)
+    G = _Key(center=G3, mode=Mode.MAJOR)
+    Gis = _Key(center=Gis3, mode=Mode.MAJOR)
+    A = _Key(center=A3, mode=Mode.MAJOR)
+    Ais = _Key(center=Ais3, mode=Mode.MAJOR)
+    B = _Key(center=B3, mode=Mode.MAJOR)
+    C = _Key(center=C4, mode=Mode.MAJOR)
+    Cis = _Key(center=Cis4, mode=Mode.MAJOR)
+    D = _Key(center=D4, mode=Mode.MAJOR)
+    Dis = _Key(center=Dis4, mode=Mode.MAJOR)
+    E = _Key(center=E4, mode=Mode.MAJOR)
+    F = _Key(center=F4, mode=Mode.MAJOR)
+    Fis = _Key(center=Fis4, mode=Mode.MAJOR)
 
 
 class Spacement(NamedTuple):

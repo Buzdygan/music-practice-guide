@@ -2,18 +2,18 @@ from enum import Enum
 from typing import Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import Key, MusicalElement, Note
-from exercise.music_representation.piece import PieceLike
+from music21 import stream
+
+from exercise.music_representation.base import Key, MusicalElement
+from exercise.music_representation.piece import Piece
+from exercise.notation import create_score
+from exercise.note_positioning import shift_notes_if_needed
 
 
 @frozen
 class Exercise:
     exercise_id: str
-    piece: PieceLike
-
-    @property
-    def notes(self) -> Tuple[Note, ...]:
-        return self.piece.notes
+    piece: Piece
 
     @property
     def musical_elements(self) -> Tuple[MusicalElement, ...]:
@@ -25,6 +25,33 @@ class ExercisePractice:
     exercise: Exercise
     key: Key
     tempo: int
+
+    @property
+    def score(self) -> stream.Score:
+        left_hand_notes = (
+            self.exercise.piece.left_hand_part.notes
+            if self.exercise.piece.left_hand_part is not None
+            else None
+        )
+
+        right_hand_notes = (
+            self.exercise.piece.right_hand_part.notes
+            if self.exercise.piece.right_hand_part is not None
+            else None
+        )
+
+        left_hand_notes, right_hand_notes = shift_notes_if_needed(
+            key=self.key,
+            left_hand_notes=left_hand_notes,
+            right_hand_notes=right_hand_notes,
+        )
+        return create_score(
+            key=self.key,
+            tempo=self.tempo,
+            meter=self.exercise.piece.meter,
+            left_hand_notes=left_hand_notes,
+            right_hand_notes=right_hand_notes,
+        )
 
 
 class Hand(Enum):

@@ -9,7 +9,7 @@ from exercise.music_representation.utils.spacements import (
 )
 
 from exercise.music_representation.rhythm import Rhythm
-from exercise.music_representation.pitch import PitchProgression
+from exercise.music_representation.pitch_progression import PitchProgression
 from exercise.music_representation.melody import Melody
 
 
