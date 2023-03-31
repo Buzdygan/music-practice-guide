@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from keating.views import render_sheet_music
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("sheet-music/", render_sheet_music, name="render_sheet_music"),
 ]
