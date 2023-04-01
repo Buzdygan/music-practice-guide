@@ -12,8 +12,10 @@ from exercise.music_representation.base import (
     MusicalElement,
 )
 from exercise.music_representation.rhythm_complexity import (
-    extract_pulse_length_and_onsets,
     syncopation,
+)
+from exercise.music_representation.utils.spacements import (
+    extract_pulse_length_and_onsets,
 )
 
 METER_4_4 = Fraction(4, 4, _normalize=False)

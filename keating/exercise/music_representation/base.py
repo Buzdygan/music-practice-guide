@@ -74,7 +74,7 @@ class Spacement(NamedTuple):
         return f"pos_{self.position}_dur_{self.duration}_rest_{self.is_rest}"
 
 
-class Note(NamedTuple):
+class RelativeNote(NamedTuple):
     relative_pitch: RelativePitch
     spacement: Spacement
     modifiers: Tuple[Modifier, ...] = ()

@@ -2,7 +2,7 @@ from fractions import Fraction
 from typing import Optional, Protocol, Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import MusicalElement, Note
+from exercise.music_representation.base import MusicalElement, RelativeNote
 
 
 class PartLike(Protocol):
@@ -11,7 +11,7 @@ class PartLike(Protocol):
         ...
 
     @property
-    def notes(self) -> Tuple[Note, ...]:
+    def notes(self) -> Tuple[RelativeNote, ...]:
         ...
 
     @property

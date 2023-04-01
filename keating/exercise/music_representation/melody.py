@@ -11,7 +11,7 @@ from attrs import frozen
 
 from exercise.music_representation.base import (
     Difficulty,
-    Note,
+    RelativeNote,
     MusicalElement,
 )
 from exercise.music_representation.harmony import HarmonyProgression
@@ -44,7 +44,7 @@ class Melody(MusicalElement):
         return self.name
 
     @property
-    def notes(self) -> Tuple[Note, ...]:
+    def notes(self) -> Tuple[RelativeNote, ...]:
         return tuple(self)
 
     @property
@@ -59,7 +59,7 @@ class Melody(MusicalElement):
             }
         )
 
-    def __iter__(self) -> Iterator[Note]:
+    def __iter__(self) -> Iterator[RelativeNote]:
         pitches = list(self.pitch_progression)
         spacements = tuple(self.rhythm)
         notes_num = lcm(len(pitches), len(spacements))
@@ -73,7 +73,7 @@ class Melody(MusicalElement):
                 spacements=spacements, meter=self.rhythm.meter
             )
         yield from (
-            Note(relative_pitch=pitch, spacement=spacement)
+            RelativeNote(relative_pitch=pitch, spacement=spacement)
             for pitch, spacement in zip(pitches, spacements)
         )
 
@@ -86,7 +86,7 @@ class HarmonyLine(MusicalElement):
     def _default_name(self) -> str:
         return f"harmony_progression_{self.harmony_progression.name}_rhythm_{self.rhythm.name}"
 
-    def __iter__(self) -> Iterator[Note]:
+    def __iter__(self) -> Iterator[RelativeNote]:
         harmonies = list(self.harmony_progression)
         spacements = tuple(self.rhythm)
         harmonies_num = lcm(len(harmonies), len(spacements))
@@ -96,7 +96,7 @@ class HarmonyLine(MusicalElement):
             spacements=spacements, factor=harmonies_num // len(spacements)
         )
         yield from (
-            Note(relative_pitch=pitch, spacement=spacement)
+            RelativeNote(relative_pitch=pitch, spacement=spacement)
             for harmony, spacement in zip(harmonies, spacements)
             for pitch in harmony
         )

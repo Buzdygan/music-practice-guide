@@ -1,9 +1,12 @@
 from fractions import Fraction
 from typing import Optional, Tuple
 from music21 import stream, clef
-from exercise.music_representation.base import Key, Note
+from exercise.music_representation.base import Key, RelativeNote
 
 from exercise.music_representation.piece import PartLike
+from exercise.music_representation.utils.spacements import (
+    extract_pulse_length_and_onsets,
+)
 
 """
  Procedure for generating notes
@@ -28,7 +31,7 @@ def create_score(
     key: Key,
     tempo: int,
     meter: Fraction,
-    left_hand_notes: Optional[Tuple[Note, ...]],
-    right_hand_notes: Optional[Tuple[Note, ...]],
+    left_hand_notes: Optional[Tuple[RelativeNote, ...]],
+    right_hand_notes: Optional[Tuple[RelativeNote, ...]],
 ) -> stream.Score:
     pass

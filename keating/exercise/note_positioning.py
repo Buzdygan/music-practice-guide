@@ -1,6 +1,6 @@
 from typing import Optional, Tuple
 
-from exercise.music_representation.base import Key, Note
+from exercise.music_representation.base import Key, RelativeNote
 from exercise.music_representation.pitch import C8, G4, E3
 
 LOWEST_LEFT_HAND_PITCH = 0
@@ -10,11 +10,11 @@ HIGHEST_RIGHT_HAND_PITCH = C8
 
 
 def _shift_notes(
-    notes: Tuple[Note, ...],
+    notes: Tuple[RelativeNote, ...],
     shift: int,
-) -> Tuple[Note, ...]:
+) -> Tuple[RelativeNote, ...]:
     return tuple(
-        Note(
+        RelativeNote(
             relative_pitch=note.relative_pitch + shift,
             spacement=note.spacement,
             modifiers=note.modifiers,
@@ -23,17 +23,17 @@ def _shift_notes(
     )
 
 
-def _highest(notes: Tuple[Note, ...]) -> int:
+def _highest(notes: Tuple[RelativeNote, ...]) -> int:
     return max(note.relative_pitch for note in notes)
 
 
-def _lowest(notes: Tuple[Note, ...]) -> int:
+def _lowest(notes: Tuple[RelativeNote, ...]) -> int:
     return min(note.relative_pitch for note in notes)
 
 
 def _fit_into_range(
-    notes: Tuple[Note, ...], min_pitch: int, max_pitch: int
-) -> Tuple[Note, ...]:
+    notes: Tuple[RelativeNote, ...], min_pitch: int, max_pitch: int
+) -> Tuple[RelativeNote, ...]:
 
     lowest_pitch = _lowest(notes)
     highest_pitch = _highest(notes)
@@ -53,9 +53,9 @@ def _fit_into_range(
 
 def shift_notes_if_needed(
     key: Key,
-    left_hand_notes: Optional[Tuple[Note, ...]],
-    right_hand_notes: Optional[Tuple[Note, ...]],
-) -> Tuple[Optional[Tuple[Note, ...]], Optional[Tuple[Note, ...]]]:
+    left_hand_notes: Optional[Tuple[RelativeNote, ...]],
+    right_hand_notes: Optional[Tuple[RelativeNote, ...]],
+) -> Tuple[Optional[Tuple[RelativeNote, ...]], Optional[Tuple[RelativeNote, ...]]]:
 
     if left_hand_notes:
         left_hand_notes = _fit_into_range(

@@ -2,6 +2,7 @@ from fractions import Fraction
 from typing import List, Tuple
 
 from exercise.music_representation.base import Spacement
+from exercise.utils import gcd
 
 
 def dot(duration: Fraction) -> Fraction:
@@ -63,3 +64,20 @@ def extend_to_full_measure(
 
     mult = meter / spacements_duration
     return multiply_spacements(spacements, int(mult * mult.denominator))
+
+
+def extract_pulse_length_and_onsets(
+    spacements: Tuple[Spacement, ...]
+) -> Tuple[Fraction, List[int]]:
+    events = sorted(
+        list(
+            set(
+                [spacement.position for spacement in spacements]
+                + [spacement.position + spacement.duration for spacement in spacements]
+            )
+        )
+    )
+
+    pulse_length = gcd(events)
+
+    return pulse_length, sorted([int(event / pulse_length) for event in events])

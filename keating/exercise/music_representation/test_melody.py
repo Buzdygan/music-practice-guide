@@ -1,6 +1,6 @@
 from fractions import Fraction
 
-from exercise.music_representation.base import Note, Spacement, meter
+from exercise.music_representation.base import RelativeNote, Spacement, meter
 from exercise.music_representation.utils.spacements import (
     EIGHTH,
     QUARTER,
@@ -25,35 +25,35 @@ def test_melody() -> None:
         ),
     )
     assert list(melody) == [
-        Note(
+        RelativeNote(
             relative_pitch=0,
             spacement=Spacement(position=Fraction(0), duration=QUARTER),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=2,
             spacement=Spacement(position=Fraction(1, 4), duration=dot(QUARTER)),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=4,
             spacement=Spacement(position=Fraction(5, 8), duration=QUARTER),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=5,
             spacement=Spacement(position=Fraction(7, 8), duration=EIGHTH),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=7,
             spacement=Spacement(position=Fraction(1), duration=QUARTER),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=9,
             spacement=Spacement(position=Fraction(5, 4), duration=dot(QUARTER)),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=11,
             spacement=Spacement(position=Fraction(13, 8), duration=QUARTER),
         ),
-        Note(
+        RelativeNote(
             relative_pitch=12,
             spacement=Spacement(position=Fraction(15, 8), duration=EIGHTH),
         ),
