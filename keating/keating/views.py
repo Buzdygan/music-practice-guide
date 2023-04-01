@@ -2,15 +2,34 @@ import os
 import tempfile
 
 from django.http import FileResponse
-from music21 import stream, note, duration, clef, meter, chord, tie
+from music21 import stream, note, duration, clef, meter, chord, tie, tempo
 from music21.duration import Duration
+
+from exercise.generators.exercise_generator import ExerciseGenerator
+from exercise.generators.hand_coordination import HandCoordinationPieceGenerator
+from exercise.practice_log import PracticeLog, PracticeResult
+
+
+def simulate_practice(steps: int = 10) -> None:
+    practice_log = PracticeLog(user_id="simulation_test_user")
+    exercise_generator = ExerciseGenerator(
+        practice_log=practice_log,
+        piece_generator=HandCoordinationPieceGenerator(),
+    )
+
+    for step_no in range(steps):
+        exercise_practice = exercise_generator.generate()
+        practice_log.log_practice(
+            exercise_practice=exercise_practice, result=PracticeResult.COMPLETED
+        )
+    return exercise_practice.score
 
 
 def _get_score() -> stream.Score:
     # Create the upper staff with treble clef
     upper_staff = stream.Part()
     upper_staff.append(clef.TrebleClef())
-    upper_staff.insert(0, meter.TimeSignature("3/4"))
+    upper_staff.append(meter.TimeSignature("3/4"))
 
     # Add some notes to the upper staff
     # for pitch in ["C4", "D4", "E4", "F4", "G4", "A4", "B4"]:
@@ -52,8 +71,13 @@ def _get_score() -> stream.Score:
 
     # Combine the upper and lower staff into a score
     score = stream.Score()
+    mm1 = tempo.MetronomeMark(number=60)
+    upper_staff.insert(0, mm1)
+    # score.append(upper_staff)
+    # score.append(lower_staff)
+    # score.show()
     score.insert(0, upper_staff)
-    # score.insert(0, lower_staff)
+    score.insert(0, lower_staff)
 
     return score
 
@@ -61,11 +85,14 @@ def _get_score() -> stream.Score:
 def _render_score(score: stream.Score) -> FileResponse:
     fd, path = tempfile.mkstemp()
     os.close(fd)
-    path = score.write(fmt="lily.png", fp=path)
+    # path = score.write(fmt="lily.png", fp=path)
+    path = score.write(fmt="musicxml.png", fp=path)
     response = FileResponse(open(path, "rb"))
     os.remove(path)
     return response
 
 
 def render_sheet_music(request):
-    return _render_score(_get_score())
+    # score = _get_score()
+    score = simulate_practice(2)
+    return _render_score(score)

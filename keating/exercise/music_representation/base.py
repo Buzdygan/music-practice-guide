@@ -64,6 +64,14 @@ class Key(Enum):
     F = _Key(center=F4, mode=Mode.MAJOR)
     Fis = _Key(center=Fis4, mode=Mode.MAJOR)
 
+    @property
+    def center(self) -> Pitch:
+        return self.value.center
+
+    @property
+    def mode(self) -> Mode:
+        return self.value.mode
+
 
 class Spacement(NamedTuple):
     position: Fraction
@@ -103,7 +111,7 @@ class NoteHarmony(NamedTuple):
 @total_ordering
 @frozen
 class Difficulty:
-    sub_difficulties: Dict[str, Union[float, "Difficulty"]]
+    sub_difficulties: Dict[str, Union[int, float, "Difficulty"]]
 
     @property
     def point(self) -> Tuple[float, ...]:
@@ -111,7 +119,7 @@ class Difficulty:
         for _, difficulty in sorted(self.sub_difficulties.items()):
             if isinstance(difficulty, self.__class__):
                 point.extend(difficulty.point)
-            elif isinstance(difficulty, float):
+            elif isinstance(difficulty, (int, float)):
                 point.append(difficulty)
             else:
                 raise ValueError(f"Unknown difficulty type: {type(difficulty)}")

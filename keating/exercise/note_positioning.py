@@ -40,14 +40,18 @@ def _fit_into_range(
 
     octave_shift = 0
     if highest_pitch > max_pitch:
-        octave_shift = -(highest_pitch - max_pitch - 1) // 12
+        octave_shift = -1 - (highest_pitch - max_pitch - 1) // 12
     elif lowest_pitch < min_pitch:
-        octave_shift = (min_pitch - lowest_pitch - 1) // 12
+        octave_shift = 1 + (min_pitch - lowest_pitch - 1) // 12
 
     if octave_shift:
         notes = _shift_notes(notes, octave_shift * 12)
     if _highest(notes) > max_pitch or _lowest(notes) < min_pitch:
-        raise ValueError("notes do not fit into range")
+        raise ValueError(
+            f"notes do not fit into range\n"
+            f"Range: ({min_pitch}, {max_pitch})\nNote range: {_lowest(notes)}, {_highest(notes)}\n"
+            f"Original notes: {lowest_pitch}, {highest_pitch}"
+        )
     return notes
 
 
