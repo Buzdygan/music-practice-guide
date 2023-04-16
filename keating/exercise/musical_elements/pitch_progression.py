@@ -62,17 +62,24 @@ MAJOR_PENTATONIC_SCALE = Scale(
     relative_pitches=(0, 2, 4, 7, 9),
 )
 
+ONE_NOTE_PITCH_PROGRESSION = PitchProgression(
+    name="one_note",
+    relative_pitches=(0,),
+)
+
 
 def basic_pitch_progressions() -> Iterable[PitchProgression]:
     return (
-        MINOR_PENTATONIC_SCALE,
+        ONE_NOTE_PITCH_PROGRESSION,
+        # MINOR_PENTATONIC_SCALE,
         IONIAN_SCALE,
-        AEOLIAN_SCALE,
+        # AEOLIAN_SCALE,
     )
 
 
 PITCH_PROGRESSIONS = (
-    *MODAL_SCALES,
-    MINOR_PENTATONIC_SCALE,
-    MAJOR_PENTATONIC_SCALE,
+    IONIAN_SCALE,
+    # *MODAL_SCALES,
+    # MINOR_PENTATONIC_SCALE,
+    # MAJOR_PENTATONIC_SCALE,
 )

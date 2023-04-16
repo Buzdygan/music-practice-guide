@@ -1,16 +1,23 @@
-import os
-import tempfile
+from typing import Iterator, NamedTuple, Optional
 
-from django.http import FileResponse
-from music21 import stream, note, duration, clef, meter, chord, tie, tempo
-from music21.duration import Duration
+from django.shortcuts import render
+from django.core.paginator import Paginator
+
+from exercise.base import Exercise, ExercisePractice
 
 from exercise.generators.exercise_generator import ExerciseGenerator
 from exercise.generators.hand_coordination import HandCoordinationPieceGenerator
+from exercise.generators.rhythms import RhythmsPieceGenerator
+from exercise.music_representation.base import Key
 from exercise.practice_log import PracticeLog, PracticeResult
 
 
-def simulate_practice(steps: int = 10) -> None:
+class Score(NamedTuple):
+    sheet: str
+    difficulty: str
+
+
+def _get_simulated_score(steps: int = 10) -> Iterator[str]:
     practice_log = PracticeLog(user_id="simulation_test_user")
     exercise_generator = ExerciseGenerator(
         practice_log=practice_log,
@@ -19,80 +26,38 @@ def simulate_practice(steps: int = 10) -> None:
 
     for step_no in range(steps):
         exercise_practice = exercise_generator.generate()
+        yield exercise_practice.score
         practice_log.log_practice(
             exercise_practice=exercise_practice, result=PracticeResult.COMPLETED
         )
-    return exercise_practice.score
 
 
-def _get_score() -> stream.Score:
-    # Create the upper staff with treble clef
-    upper_staff = stream.Part()
-    upper_staff.append(clef.TrebleClef())
-    upper_staff.append(meter.TimeSignature("3/4"))
+def _get_scores(piece_generator, num_pieces: Optional[int] = None) -> Iterator[Score]:
+    pieces_w_difficulty = sorted(list(piece_generator.pieces()), key=lambda x: x[1])
+    if num_pieces:
+        pieces_w_difficulty = pieces_w_difficulty[:num_pieces]
 
-    # Add some notes to the upper staff
-    # for pitch in ["C4", "D4", "E4", "F4", "G4", "A4", "B4"]:
-    #     n = note.Note(pitch)
+    keys = list(Key)
+    for idx, (piece, difficulty) in enumerate(pieces_w_difficulty):
 
-    n1 = note.Note("C4", duration=Duration(0.75))
-    n2 = note.Note("C4", duration=Duration(0.25))
-    # upper_staff.append(note.Note("D4", type="eighth"))
-    # upper_staff.append(note.Note("C4", type="half"))
-    # upper_staff.append(note.Note("D4", type="eighth"))
-    # n.duration = duration.Duration(2)
-
-    n3 = note.Note("C4", duration=Duration(0.25))
-    n4 = note.Note("G4", duration=Duration(0.25))
-    n5 = note.Note("D4", duration=Duration(0.25))
-    n6 = note.Note("G4", duration=Duration(0.25))
-
-    tie_obj = tie.Tie()
-    n4.tie = tie_obj
-    n6.tie = tie_obj
-
-    upper_staff.append(chord.Chord([n3, n4]))
-    upper_staff.append(chord.Chord([n5, n6]))
-    # upper_staff.append(n5)
-
-    # upper_staff.append(ch)
-    # upper_staff.append(n1)
-    # upper_staff.append(n2)
-
-    # Create the lower staff with bass clef
-    lower_staff = stream.Part()
-    lower_staff.append(clef.BassClef())
-
-    # Add some notes to the lower staff
-    for pitch in ["C0", "G2", "B2", "D3"]:
-        n = note.Note(pitch)
-        n.duration = duration.Duration(1.0 / 3)
-        lower_staff.append(n)
-
-    # Combine the upper and lower staff into a score
-    score = stream.Score()
-    mm1 = tempo.MetronomeMark(number=60)
-    upper_staff.insert(0, mm1)
-    # score.append(upper_staff)
-    # score.append(lower_staff)
-    # score.show()
-    score.insert(0, upper_staff)
-    score.insert(0, lower_staff)
-
-    return score
+        sheet = ExercisePractice(
+            key=Key.C,
+            tempo=60,
+            exercise=Exercise(piece=piece, exercise_id=""),
+        ).score
+        yield Score(sheet=sheet, difficulty=str(difficulty))
 
 
-def _render_score(score: stream.Score) -> FileResponse:
-    fd, path = tempfile.mkstemp()
-    os.close(fd)
-    # path = score.write(fmt="lily.png", fp=path)
-    path = score.write(fmt="musicxml.png", fp=path)
-    response = FileResponse(open(path, "rb"))
-    os.remove(path)
-    return response
+scores = list(_get_scores(piece_generator=HandCoordinationPieceGenerator()))
+# scores = list(_get_scores(piece_generator=RhythmsPieceGenerator()))
 
 
 def render_sheet_music(request):
-    # score = _get_score()
-    score = simulate_practice(2)
-    return _render_score(score)
+    paginator = Paginator(scores, 3)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(
+        request,
+        "sheet_music.html",
+        {"scores": page_obj},
+    )

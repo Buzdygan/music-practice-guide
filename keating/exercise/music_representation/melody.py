@@ -4,6 +4,7 @@ from fractions import Fraction
 from math import lcm
 from typing import (
     Iterator,
+    Optional,
     Tuple,
 )
 
@@ -19,7 +20,6 @@ from exercise.music_representation.pitch_progression import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
 from exercise.music_representation.utils.spacements import (
     multiply_spacements,
-    extend_to_full_measure,
 )
 from exercise.music_representation.chord import ChordProgression
 
@@ -28,7 +28,7 @@ from exercise.music_representation.chord import ChordProgression
 class Melody(MusicalElement):
     pitch_progression: PitchProgression
     rhythm: Rhythm
-    extend_to_full_measure: bool = True
+    num_measures: Optional[int] = None
 
     def _default_name(self) -> str:
         return (
@@ -62,19 +62,21 @@ class Melody(MusicalElement):
     def __iter__(self) -> Iterator[RelativeNote]:
         pitches = list(self.pitch_progression)
         spacements = tuple(self.rhythm)
-        notes_num = lcm(len(pitches), len(spacements))
+        if self.num_measures is None:
+            notes_num = lcm(len(pitches), len(spacements))
+            rhythm_repetitions = notes_num // len(spacements)
+            pitches_repetitions = notes_num // len(pitches)
+        else:
+            duration = self.num_measures * self.meter
+            rhythm_repetitions = int(duration / self.rhythm.duration)
+            pitches_repetitions = len(spacements) * rhythm_repetitions // len(pitches)
 
-        pitches = pitches * (notes_num // len(pitches))
-        spacements = multiply_spacements(
-            spacements=spacements, factor=notes_num // len(spacements)
-        )
-        if self.extend_to_full_measure:
-            spacements = extend_to_full_measure(
-                spacements=spacements, meter=self.rhythm.meter
-            )
         yield from (
             RelativeNote(relative_pitch=pitch, spacement=spacement)
-            for pitch, spacement in zip(pitches, spacements)
+            for pitch, spacement in zip(
+                pitches * pitches_repetitions,
+                multiply_spacements(spacements=spacements, factor=rhythm_repetitions),
+            )
         )
 
 

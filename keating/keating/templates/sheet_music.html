@@ -1,10 +1,60 @@
-<html>
-<head>
-    <title>Sheet Music</title>
-</head>
-<body>
-    <object type="image/png" data="{% url 'render_sheet_music' %}">
-        Your browser doesn't support SVG images.
-    </object>
-</body>
-</html>
+{% extends "base.html" %}
+{% load static %}
+
+{% block styles %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/sheet_music.css' %}">
+    <style>
+        .row {
+            display: flex;
+        }
+
+        .left {
+            flex: 55%;
+            margin-left: 5%;
+        }
+        .right {
+            flex: 35%;
+            margin-top: 3%;
+            margin-left: 5%;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {% for score in scores %}
+    <div class="score row">
+        <span id="score-{{ forloop.counter }}" class="column left"></span>
+        <pre id="score-{{ forloop.counter }}-difficulty" class="column right">{{ score.difficulty|safe}}</pre>
+        <script>
+            var sheetMusicDiv = document.getElementById("score-{{ forloop.counter }}");
+            var abcNotation = "{{ score.sheet|escapejs }}"; 
+            ABCJS.renderAbc(sheetMusicDiv, abcNotation, {responsive: "resize"});
+        </script>
+    </div>
+    {% endfor %}
+
+    {% if scores.has_other_pages %}
+    <nav>
+      <ul class="pagination justify-content-center">
+        {% if scores.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ scores.previous_page_number }}">&laquo;</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+        {% endif %}
+        {% for page in scores.paginator.page_range %}
+          {% if page == scores.number %}
+            <li class="page-item active"><span class="page-link">{{ page }}</span></li>
+          {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ page }}">{{ page }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if scores.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ scores.next_page_number }}">&raquo;</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}

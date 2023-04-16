@@ -2,11 +2,9 @@ from enum import Enum
 from typing import Tuple
 from attrs import frozen
 
-from music21 import stream
-
 from exercise.music_representation.base import Key, MusicalElement
 from exercise.music_representation.piece import Piece
-from exercise.notation import create_score
+from exercise.notation_abcjs import create_score
 from exercise.note_positioning import shift_notes_if_needed
 
 
@@ -27,7 +25,7 @@ class ExercisePractice:
     tempo: int
 
     @property
-    def score(self) -> stream.Score:
+    def score(self) -> str:
         left_hand_notes = (
             self.exercise.piece.left_hand_part.notes
             if self.exercise.piece.left_hand_part is not None

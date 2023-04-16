@@ -11,11 +11,13 @@ from attrs import frozen, field
 from exercise.music_representation.pitch import (
     A3,
     B3,
+    C0,
     C4,
     D4,
     E4,
     F4,
     G3,
+    PITCH_LETTERS,
     Ais3,
     Cis4,
     Dis4,
@@ -48,38 +50,71 @@ class Modifier(Enum):
 class _Key(NamedTuple):
     center: Pitch
     mode: Mode
+    # positive means number of sharps, negative means number of flats
+    accidentals_id: int
+
+
+KEY_RELATIVE_PITCHES = {0, 2, 4, 5, 7, 9, 11}
 
 
 class Key(Enum):
-    G = _Key(center=G3, mode=Mode.MAJOR)
-    Gis = _Key(center=Gis3, mode=Mode.MAJOR)
-    A = _Key(center=A3, mode=Mode.MAJOR)
-    Ais = _Key(center=Ais3, mode=Mode.MAJOR)
-    B = _Key(center=B3, mode=Mode.MAJOR)
-    C = _Key(center=C4, mode=Mode.MAJOR)
-    Cis = _Key(center=Cis4, mode=Mode.MAJOR)
-    D = _Key(center=D4, mode=Mode.MAJOR)
-    Dis = _Key(center=Dis4, mode=Mode.MAJOR)
-    E = _Key(center=E4, mode=Mode.MAJOR)
-    F = _Key(center=F4, mode=Mode.MAJOR)
-    Fis = _Key(center=Fis4, mode=Mode.MAJOR)
+    Gb = _Key(center=Fis4, mode=Mode.MAJOR, accidentals_id=-6)
+    Db = _Key(center=Cis4, mode=Mode.MAJOR, accidentals_id=-5)
+    Ab = _Key(center=Gis3, mode=Mode.MAJOR, accidentals_id=-4)
+    Eb = _Key(center=Dis4, mode=Mode.MAJOR, accidentals_id=-3)
+    Bb = _Key(center=Ais3, mode=Mode.MAJOR, accidentals_id=-2)
+    F = _Key(center=F4, mode=Mode.MAJOR, accidentals_id=-1)
+    C = _Key(center=C4, mode=Mode.MAJOR, accidentals_id=0)
+    G = _Key(center=G3, mode=Mode.MAJOR, accidentals_id=1)
+    D = _Key(center=D4, mode=Mode.MAJOR, accidentals_id=2)
+    A = _Key(center=A3, mode=Mode.MAJOR, accidentals_id=3)
+    E = _Key(center=E4, mode=Mode.MAJOR, accidentals_id=4)
+    B = _Key(center=B3, mode=Mode.MAJOR, accidentals_id=5)
 
     @property
     def center(self) -> Pitch:
         return self.value.center
 
     @property
+    def accidentals_id(self) -> int:
+        return self.value.accidentals_id
+
+    @property
     def mode(self) -> Mode:
         return self.value.mode
+
+    def get_note(self, relative_pitch: int) -> Tuple[str, int, Optional[int]]:
+        """Returns the note name, octave, and accidental id for a given relative pitch
+        - accidental id is None if the note is in the key signature
+        - accidental id is 0 if the note is natural
+        - accidental id is positive if the note is sharp
+        - accidental id is negative if the note is flat
+        """
+
+        pitch = self.center + relative_pitch - C0
+        is_natural = PITCH_LETTERS[pitch % OCTAVE] is not None
+        accidental_id = 2 * int(self.accidentals_id >= 0) - 1
+
+        letter = (
+            PITCH_LETTERS[pitch % OCTAVE]
+            if is_natural
+            else PITCH_LETTERS[(OCTAVE + pitch - accidental_id) % OCTAVE]
+        )
+
+        if (10 * OCTAVE + relative_pitch) % OCTAVE in KEY_RELATIVE_PITCHES:
+            accidental_id = None
+        elif is_natural:
+            accidental_id = 0
+
+        return letter, pitch // OCTAVE, accidental_id
 
 
 class Spacement(NamedTuple):
     position: Fraction
     duration: Fraction
-    is_rest: bool = False
 
     def __repr__(self) -> str:
-        return f"pos_{self.position}_dur_{self.duration}_rest_{self.is_rest}"
+        return f"pos_{self.position}_dur_{self.duration}"
 
 
 class RelativeNote(NamedTuple):
@@ -128,6 +163,21 @@ class Difficulty:
     @property
     def level(self) -> float:
         return sum(x**2 for x in self.point) ** 0.5
+
+    def __repr__(self) -> str:
+        def _add_indent(text: str) -> str:
+            lines = text.splitlines()
+            return "\n".join("    " + line for line in lines)
+
+        result = ""
+        for key, sub_difficulty in self.sub_difficulties.items():
+            if isinstance(sub_difficulty, self.__class__):
+                sub_difficulty_str = _add_indent(repr(sub_difficulty))
+                result += f"{key}:\n{sub_difficulty_str}"
+            else:
+                result += f"{key}: {float(sub_difficulty):.2f}"
+            result += "\n"
+        return result
 
     def _assert_is_comparable(self, other: Any) -> None:
         if not isinstance(other, Difficulty):

@@ -40,3 +40,21 @@ def gcd(fractions: Sequence[Fraction]) -> Fraction:
         )
 
     return Fraction(reduce(lambda x, y: _gcd(x, y), fractions))
+
+
+def lcm(fractions: Sequence[Fraction]) -> Fraction:
+    """Get the least common multiple of a list of fractions.
+
+    Args:
+        fractions (list): A list of fractions.
+
+    Returns:
+        Fraction: The least common multiple of the list of fractions.
+    """
+
+    def _lcm(a: Fraction, b: Fraction) -> Fraction:
+        return Fraction(
+            math.lcm(a.numerator, b.numerator), math.gcd(a.denominator, b.denominator)
+        )
+
+    return Fraction(reduce(lambda x, y: _lcm(x, y), fractions))

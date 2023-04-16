@@ -1,4 +1,6 @@
 # number of key on the piano
+
+
 C0 = -8
 E3 = 32
 G3 = 35
@@ -16,25 +18,34 @@ Fis4 = 46
 G4 = 47
 C8 = 88
 
-PITCH_NAMES = (
+PITCH_LETTERS = (
     "C",
-    "C#",
+    None,
     "D",
-    "D#",
+    None,
     "E",
     "F",
-    "F#",
+    None,
     "G",
-    "G#",
+    None,
     "A",
-    "A#",
+    None,
     "B",
 )
 
 
-def pitch_to_str(pitch: int) -> str:
+def pitch_to_str(positive_key: bool, pitch: int) -> str:
     if pitch < C0:
         raise ValueError(f"pitch {pitch} is too low")
 
     relative_pitch = pitch - C0
-    return PITCH_NAMES[relative_pitch % 12] + str(relative_pitch // 12)
+    octave = str(relative_pitch // 12)
+    pitch_letter = PITCH_LETTERS[relative_pitch % 12]
+    if pitch_letter is not None:
+        return pitch_letter + octave
+
+    if positive_key:
+        pitch_letter = PITCH_LETTERS[(relative_pitch - 1) % 12] + "#"
+    else:
+        pitch_letter = PITCH_LETTERS[(relative_pitch + 1) % 12] + "b"
+    return pitch_letter + octave

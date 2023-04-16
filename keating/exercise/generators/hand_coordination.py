@@ -1,5 +1,6 @@
-from math import lcm
+import math
 from typing import Iterable, Iterator, Optional, Tuple
+from exercise.config import MAX_MEASURES
 
 from exercise.learning import Difficulty
 from exercise.music_representation.melody import Melody
@@ -11,6 +12,19 @@ from exercise.musical_elements.pitch_progression import (
     basic_pitch_progressions,
 )
 from exercise.musical_elements.rhythm import RHYTHMS
+from exercise.utils import lcm
+
+
+def _conform_rhythms(
+    left_hand_rhythm: Rhythm, right_hand_rhythm: Rhythm
+) -> Tuple[int, int, int]:
+    """Conform rhythms to the same duration."""
+    duration = lcm([left_hand_rhythm.duration, right_hand_rhythm.duration])
+    return (
+        duration / left_hand_rhythm.duration,
+        duration / right_hand_rhythm.duration,
+        duration,
+    )
 
 
 def create_piece_with_difficulty(
@@ -18,24 +32,48 @@ def create_piece_with_difficulty(
     left_hand_pitch_progression: PitchProgression,
     right_hand_rhythm: Rhythm,
     right_hand_pitch_progression: PitchProgression,
-) -> Tuple[Piece, Difficulty]:
+    max_measure_num: int = MAX_MEASURES,
+) -> Optional[Tuple[Piece, Difficulty]]:
     """Create piece with difficulty."""
 
-    return Piece(
-        left_hand_part=Melody(
-            rhythm=left_hand_rhythm, pitch_progression=left_hand_pitch_progression
-        ),
-        right_hand_part=Melody(
-            rhythm=right_hand_rhythm, pitch_progression=right_hand_pitch_progression
-        ),
-    ), Difficulty(
-        sub_difficulties={
-            "left_hand_rhythm": left_hand_rhythm.difficulty,
-            "left_hand_pitch_progression": left_hand_pitch_progression.difficulty,
-            "right_hand_rhythm": right_hand_rhythm.difficulty,
-            "right_hand_pitch_progression": right_hand_pitch_progression.difficulty,
-        }
+    meter = left_hand_rhythm.meter
+    left_repetitions, right_repetitions, duration = _conform_rhythms(
+        left_hand_rhythm, right_hand_rhythm
     )
+    left_notes = len(list(left_hand_rhythm)) * left_repetitions
+    right_notes = len(list(right_hand_rhythm)) * right_repetitions
+
+    max_repetitions = int(max_measure_num * meter / duration)
+    for repetition in range(1, max_repetitions + 1):
+        num_measures = math.ceil(repetition * duration / meter)
+
+        if left_notes * repetition < len(list(left_hand_pitch_progression)):
+            continue
+
+        if right_notes * repetition < len(list(right_hand_pitch_progression)):
+            continue
+
+        return Piece(
+            left_hand_part=Melody(
+                rhythm=left_hand_rhythm,
+                pitch_progression=left_hand_pitch_progression,
+                num_measures=num_measures,
+            ),
+            right_hand_part=Melody(
+                rhythm=right_hand_rhythm,
+                pitch_progression=right_hand_pitch_progression,
+                num_measures=num_measures,
+            ),
+        ), Difficulty(
+            sub_difficulties={
+                "left_hand_rhythm": left_hand_rhythm.difficulty,
+                "left_hand_pitch_progression": left_hand_pitch_progression.difficulty,
+                "right_hand_rhythm": right_hand_rhythm.difficulty,
+                "right_hand_pitch_progression": right_hand_pitch_progression.difficulty,
+            }
+        )
+
+    return None
 
 
 def iterate_matching_rhythms(rhythm: Rhythm) -> Iterator[Rhythm]:
@@ -65,13 +103,23 @@ def iterate_matching_pitch_progressions(
             pitch_progression = pitch_progression.cyclic()
         rhythm_notes_num = len(tuple(rhythm))
         pitch_progression_notes_num = len(tuple(pitch_progression))
-        lowest_common_multiple = lcm(rhythm_notes_num, pitch_progression_notes_num)
+        lowest_common_multiple = math.lcm(rhythm_notes_num, pitch_progression_notes_num)
         if (
             max_repetitions is not None
             and lowest_common_multiple / pitch_progression_notes_num > max_repetitions
         ):
             continue
         yield pitch_progression
+
+
+def iterate_rhythm_pairs() -> Iterator[Tuple[Rhythm, Rhythm]]:
+    """Iterate over rhythm pairs."""
+
+    for rhythm in sorted(RHYTHMS, key=lambda rhythm: rhythm.difficulty):
+        for other_rhythm in iterate_matching_rhythms(rhythm=rhythm):
+            if rhythm.difficulty > other_rhythm.difficulty:
+                continue
+            yield rhythm, other_rhythm
 
 
 class HandCoordinationPieceGenerator:
@@ -102,7 +150,6 @@ class HandCoordinationPieceGenerator:
             for pitch_progression in iterate_matching_pitch_progressions(
                 rhythm=rhythm,
                 is_cyclic=False,
-                max_repetitions=2,
                 pitch_progressions=basic_pitch_progressions(),
             ):
                 yield rhythm, pitch_progression
@@ -116,9 +163,11 @@ class HandCoordinationPieceGenerator:
                 left_hand_rhythm=left_hand_rhythm,
                 left_hand_progression=left_hand_progression,
             ):
-                yield create_piece_with_difficulty(
+                piece_w_difficulty = create_piece_with_difficulty(
                     left_hand_rhythm=left_hand_rhythm,
                     left_hand_pitch_progression=left_hand_progression,
                     right_hand_rhythm=right_hand_rhythm,
                     right_hand_pitch_progression=right_hand_progression,
                 )
+                if piece_w_difficulty is not None:
+                    yield piece_w_difficulty

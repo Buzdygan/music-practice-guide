@@ -54,18 +54,6 @@ def multiply_spacements(
     )
 
 
-def extend_to_full_measure(
-    spacements: Tuple[Spacement, ...], meter: Fraction
-) -> Tuple[Spacement, ...]:
-    spacements_duration = get_spacements_duration(spacements)
-
-    if spacements_duration == meter:
-        return spacements
-
-    mult = meter / spacements_duration
-    return multiply_spacements(spacements, int(mult * mult.denominator))
-
-
 def extract_pulse_length_and_onsets(
     spacements: Tuple[Spacement, ...]
 ) -> Tuple[Fraction, List[int]]:

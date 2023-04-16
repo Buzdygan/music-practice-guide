@@ -3,10 +3,10 @@ from typing import Optional, Tuple
 from exercise.music_representation.base import Key, RelativeNote
 from exercise.music_representation.pitch import C8, G4, E3
 
-LOWEST_LEFT_HAND_PITCH = 0
-HIGHEST_LEFT_HAND_PITCH = G4
-LOWEST_RIGHT_HAND_PITCH = E3
-HIGHEST_RIGHT_HAND_PITCH = C8
+MIN_LEFT_HAND_PITCH = 0
+MAX_LEFT_HAND_PITCH = G4
+MIN_RIGHT_HAND_PITCH = E3
+MAX_RIGHT_HAND_PITCH = C8
 
 
 def _shift_notes(
@@ -61,28 +61,33 @@ def shift_notes_if_needed(
     right_hand_notes: Optional[Tuple[RelativeNote, ...]],
 ) -> Tuple[Optional[Tuple[RelativeNote, ...]], Optional[Tuple[RelativeNote, ...]]]:
 
+    min_left_hand_pitch = MIN_LEFT_HAND_PITCH - key.center
+    max_left_hand_pitch = MAX_LEFT_HAND_PITCH - key.center
+    min_right_hand_pitch = MIN_RIGHT_HAND_PITCH - key.center
+    max_right_hand_pitch = MAX_RIGHT_HAND_PITCH - key.center
+
     if left_hand_notes:
         left_hand_notes = _fit_into_range(
-            left_hand_notes, LOWEST_LEFT_HAND_PITCH, HIGHEST_LEFT_HAND_PITCH
+            left_hand_notes, min_left_hand_pitch, max_left_hand_pitch
         )
     if right_hand_notes:
         right_hand_notes = _fit_into_range(
-            right_hand_notes, LOWEST_RIGHT_HAND_PITCH, HIGHEST_RIGHT_HAND_PITCH
+            right_hand_notes, min_right_hand_pitch, max_right_hand_pitch
         )
 
     if right_hand_notes is None and left_hand_notes is not None:
         highest_left_pitch = _highest(left_hand_notes)
-        if highest_left_pitch <= HIGHEST_LEFT_HAND_PITCH - 12:
+        if highest_left_pitch <= max_left_hand_pitch - 12:
             left_hand_notes = _shift_notes(
                 left_hand_notes,
-                (HIGHEST_LEFT_HAND_PITCH - highest_left_pitch) // 12 * 12,
+                (max_left_hand_pitch - highest_left_pitch) // 12 * 12,
             )
     elif left_hand_notes is None and right_hand_notes is not None:
         lowest_right_pitch = _lowest(right_hand_notes)
-        if lowest_right_pitch >= LOWEST_RIGHT_HAND_PITCH + 12:
+        if lowest_right_pitch >= min_right_hand_pitch + 12:
             right_hand_notes = _shift_notes(
                 right_hand_notes,
-                (LOWEST_RIGHT_HAND_PITCH - lowest_right_pitch) // 12 * 12,
+                (min_right_hand_pitch - lowest_right_pitch) // 12 * 12,
             )
     elif left_hand_notes is not None and right_hand_notes is not None:
         lowest_right_pitch = _lowest(right_hand_notes)
