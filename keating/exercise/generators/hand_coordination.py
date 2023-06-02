@@ -1,3 +1,4 @@
+from fractions import Fraction
 import math
 from typing import Iterable, Iterator, Optional, Tuple
 from exercise.config import MAX_MEASURES
@@ -8,21 +9,23 @@ from exercise.music_representation.piece import Piece
 from exercise.music_representation.pitch_progression import PitchProgression
 from exercise.music_representation.rhythm import Rhythm
 from exercise.musical_elements.pitch_progression import (
+    BASIC_PITCH_PROGRESSIONS,
     PITCH_PROGRESSIONS,
-    basic_pitch_progressions,
 )
 from exercise.musical_elements.rhythm import RHYTHMS
 from exercise.utils import lcm
 
+MAX_PITCH_GAP = 4
+
 
 def _conform_rhythms(
     left_hand_rhythm: Rhythm, right_hand_rhythm: Rhythm
-) -> Tuple[int, int, int]:
+) -> Tuple[int, int, Fraction]:
     """Conform rhythms to the same duration."""
     duration = lcm([left_hand_rhythm.duration, right_hand_rhythm.duration])
     return (
-        duration / left_hand_rhythm.duration,
-        duration / right_hand_rhythm.duration,
+        int(duration / left_hand_rhythm.duration),
+        int(duration / right_hand_rhythm.duration),
         duration,
     )
 
@@ -86,8 +89,6 @@ def iterate_matching_rhythms(rhythm: Rhythm) -> Iterator[Rhythm]:
 
 def iterate_matching_pitch_progressions(
     rhythm: Rhythm,
-    is_cyclic: bool = True,
-    max_repetitions: Optional[int] = None,
     pitch_progressions: Optional[Iterable[PitchProgression]] = None,
 ) -> Iterator[PitchProgression]:
     """Return pitch progressions matching given rhythm."""
@@ -98,28 +99,20 @@ def iterate_matching_pitch_progressions(
             key=lambda pitch_progression: pitch_progression.difficulty,
         )
 
-    for pitch_progression in pitch_progressions:
-        if is_cyclic:
-            pitch_progression = pitch_progression.cyclic()
-        rhythm_notes_num = len(tuple(rhythm))
-        pitch_progression_notes_num = len(tuple(pitch_progression))
-        lowest_common_multiple = math.lcm(rhythm_notes_num, pitch_progression_notes_num)
-        if (
-            max_repetitions is not None
-            and lowest_common_multiple / pitch_progression_notes_num > max_repetitions
-        ):
-            continue
-        yield pitch_progression
+    pitch_progressions = filter(
+        lambda pitch_progression: (
+            pitch_progression.num_notes % rhythm.num_notes == 0
+            or rhythm.num_notes % pitch_progression.num_notes == 0
+        ),
+        pitch_progressions,
+    )
 
+    pitch_progressions = filter(
+        lambda pitch_progression: pitch_progression.gap <= MAX_PITCH_GAP,
+        pitch_progressions,
+    )
 
-def iterate_rhythm_pairs() -> Iterator[Tuple[Rhythm, Rhythm]]:
-    """Iterate over rhythm pairs."""
-
-    for rhythm in sorted(RHYTHMS, key=lambda rhythm: rhythm.difficulty):
-        for other_rhythm in iterate_matching_rhythms(rhythm=rhythm):
-            if rhythm.difficulty > other_rhythm.difficulty:
-                continue
-            yield rhythm, other_rhythm
+    yield from pitch_progressions
 
 
 class HandCoordinationPieceGenerator:
@@ -149,8 +142,7 @@ class HandCoordinationPieceGenerator:
                 break
             for pitch_progression in iterate_matching_pitch_progressions(
                 rhythm=rhythm,
-                is_cyclic=False,
-                pitch_progressions=basic_pitch_progressions(),
+                pitch_progressions=BASIC_PITCH_PROGRESSIONS,
             ):
                 yield rhythm, pitch_progression
 

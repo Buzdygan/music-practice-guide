@@ -12,6 +12,8 @@ from exercise.music_representation.base import (
     MusicalElement,
 )
 from exercise.music_representation.rhythm_complexity import (
+    interonset,
+    unpredictability,
     syncopation,
 )
 from exercise.music_representation.utils.spacements import (
@@ -33,11 +35,6 @@ class Rhythm(MusicalElement):
 
     @spacements.validator
     def check(self, attribute, value):
-        if self.duration % self.meter != 0:
-            raise ValueError(
-                f"Rhythm duration ({self.duration}) is not a multiple of meter ({self.meter})"
-            )
-
         # Check that all spacements start from different positions
         if len(set(spacement.position for spacement in value)) != len(value):
             raise ValueError("Spacements must start from different positions")
@@ -48,7 +45,12 @@ class Rhythm(MusicalElement):
     def __iter__(self) -> Iterator[Spacement]:
         yield from self.spacements
 
-    def _default_difficulty(self) -> Difficulty:
+    @property
+    def num_notes(self) -> int:
+        return len(self.spacements)
+
+    @property
+    def difficulty(self) -> Difficulty:
         pulse_length, onsets = extract_pulse_length_and_onsets(
             spacements=self.spacements
         )
@@ -60,5 +62,9 @@ class Rhythm(MusicalElement):
             sub_difficulties={
                 "pulse_complexity": float(1 - pulse_length),
                 "syncopation": syncopation(num_pulses=num_pulses, onsets=onsets),
+                "interonset": interonset(num_pulses=num_pulses, onsets=onsets),
+                "unpredictability": unpredictability(
+                    num_pulses=num_pulses, onsets=onsets
+                ),
             }
         )

@@ -1,11 +1,15 @@
 from fractions import Fraction
-from typing import Optional, Protocol, Tuple
+from typing import Dict, Optional, Protocol, Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import MusicalElement, RelativeNote
+from exercise.music_representation.base import Difficulty, MusicalElement, RelativeNote
 
 
 class PartLike(Protocol):
+    @property
+    def difficulty(self) -> Difficulty:
+        ...
+
     @property
     def meter(self) -> Fraction:
         ...
@@ -19,12 +23,12 @@ class PartLike(Protocol):
         ...
 
     @property
-    def musical_elements(self) -> Tuple[MusicalElement, ...]:
+    def related_musical_elements(self) -> Tuple[MusicalElement, ...]:
         ...
 
 
 @frozen
-class Piece:
+class Piece(MusicalElement):
     left_hand_part: Optional[PartLike] = None
     right_hand_part: Optional[PartLike] = None
 
@@ -37,6 +41,15 @@ class Piece:
                 f"Left hand meter {self.left_hand_part.meter} "
                 f"does not match right hand meter {self.right_hand_part.meter}"
             )
+
+    @property
+    def difficulty(self) -> Difficulty:
+        sub_difficulties: Dict = {}
+        if self.left_hand_part is not None:
+            sub_difficulties["left_hand"] = self.left_hand_part.difficulty
+        if self.right_hand_part is not None:
+            sub_difficulties["right_hand"] = self.right_hand_part.difficulty
+        return Difficulty(sub_difficulties=sub_difficulties)
 
     @property
     def meter(self) -> Fraction:
@@ -52,15 +65,9 @@ class Piece:
             return self.left_hand_part.part_id  # type: ignore
         return f"{self.left_hand_part.part_id}_{self.right_hand_part.part_id}"
 
-    @property
-    def musical_elements(self) -> Tuple[MusicalElement, ...]:
-        if self.left_hand_part is None:
-            return self.right_hand_part.musical_elements  # type: ignore
-        if self.right_hand_part is None:
-            return self.left_hand_part.musical_elements  # type: ignore
-        return (
-            self.left_hand_part.musical_elements + self.right_hand_part.musical_elements
-        )
+    def _default_name(self) -> str:
+        """Define default name for musical element."""
+        return f"Piece {self.piece_id}"
 
 
 """

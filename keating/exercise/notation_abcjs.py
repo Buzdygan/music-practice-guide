@@ -55,9 +55,8 @@ def _group_into_bars(
         yield tuple(
             RelativeNote(
                 relative_pitch=relative_note.relative_pitch,
-                spacement=Spacement(
-                    position=relative_note.spacement.position - bar_number * meter,
-                    duration=relative_note.spacement.duration,
+                spacement=relative_note.spacement._replace(
+                    position=relative_note.spacement.position - bar_number * meter
                 ),
                 modifiers=relative_note.modifiers,
             )
@@ -135,31 +134,32 @@ def _convert_into_bar(
         bar_relative_notes.append(
             RelativeNote(
                 relative_pitch=relative_note.relative_pitch,
-                spacement=Spacement(
-                    position=relative_note.spacement.position,
+                spacement=relative_note.spacement._replace(
                     duration=meter - relative_note.spacement.position,
                 ),
                 modifiers=relative_note.modifiers,
             )
         )
-        remaining_relative_notes.append(
-            RelativeNote(
-                relative_pitch=relative_note.relative_pitch,
-                spacement=Spacement(
-                    position=0,
-                    duration=(
-                        relative_note.spacement.duration
-                        - meter
-                        + relative_note.spacement.position
+        if not relative_note.spacement.is_staccato:
+            remaining_relative_notes.append(
+                RelativeNote(
+                    relative_pitch=relative_note.relative_pitch,
+                    spacement=Spacement(
+                        position=Fraction(0),
+                        duration=(
+                            relative_note.spacement.duration
+                            - meter
+                            + relative_note.spacement.position
+                        ),
+                        is_staccato=False,
                     ),
-                ),
-                modifiers=relative_note.modifiers,
+                    modifiers=relative_note.modifiers,
+                )
             )
-        )
 
     result: str = ""
     for duration, _relative_notes, add_tie in _iterate_notes_in_bar(
-        meter=meter, relative_notes=bar_relative_notes
+        meter=meter, relative_notes=tuple(bar_relative_notes)
     ):
         result += _convert_notes(
             relative_pitches=[

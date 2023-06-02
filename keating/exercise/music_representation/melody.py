@@ -48,10 +48,7 @@ class Melody(MusicalElement):
         return tuple(self)
 
     @property
-    def musical_elements(self) -> Tuple[MusicalElement, ...]:
-        return (self.pitch_progression, self.rhythm)
-
-    def _default_difficulty(self) -> Difficulty:
+    def difficulty(self) -> Difficulty:
         return Difficulty(
             sub_difficulties={
                 "pitch_progression": self.pitch_progression.difficulty,

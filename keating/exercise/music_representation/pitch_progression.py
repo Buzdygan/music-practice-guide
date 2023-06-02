@@ -1,4 +1,5 @@
 from typing import (
+    Protocol,
     Tuple,
     Iterator,
 )
@@ -31,13 +32,22 @@ class PitchProgression(MusicalElement):
             relative_pitches=self.relative_pitches + self.relative_pitches[-2:0:-1],
         )
 
+    @property
+    def num_notes(self) -> int:
+        return len(self.relative_pitches)
+
+    @property
+    def gap(self) -> int:
+        return abs(self.relative_pitches[0] - self.relative_pitches[-1])
+
     def __iter__(self) -> Iterator[RelativePitch]:
         yield from self.relative_pitches
 
     def _default_name(self) -> str:
         return "-".join(map(str, self.relative_pitches))
 
-    def _default_difficulty(self) -> Difficulty:
+    @property
+    def difficulty(self) -> Difficulty:
         # TODO: add more difficulty metrics
         return Difficulty(
             sub_difficulties={
@@ -55,3 +65,16 @@ class Scale(PitchProgression):
         assert all(
             0 <= relative_pitch < OCTAVE for relative_pitch in self.relative_pitches
         ), f"Scale {self.name} has pitches from outside octave range."
+
+
+class PitchProgressionLike(Protocol):
+    def __iter__(self) -> Iterator[RelativePitch]:
+        ...
+
+    @property
+    def num_notes(self) -> int:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...

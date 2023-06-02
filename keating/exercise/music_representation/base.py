@@ -93,18 +93,21 @@ class Key(Enum):
 
         pitch = self.center + relative_pitch - C0
         is_natural = PITCH_LETTERS[pitch % OCTAVE] is not None
-        accidental_id = 2 * int(self.accidentals_id >= 0) - 1
+        _accidental_id = 2 * int(self.accidentals_id >= 0) - 1
 
         letter = (
             PITCH_LETTERS[pitch % OCTAVE]
             if is_natural
-            else PITCH_LETTERS[(OCTAVE + pitch - accidental_id) % OCTAVE]
+            else PITCH_LETTERS[(OCTAVE + pitch - _accidental_id) % OCTAVE]
         )
+        assert letter is not None, "Note letter should never be None"
 
         if (10 * OCTAVE + relative_pitch) % OCTAVE in KEY_RELATIVE_PITCHES:
             accidental_id = None
         elif is_natural:
             accidental_id = 0
+        else:
+            accidental_id = _accidental_id
 
         return letter, pitch // OCTAVE, accidental_id
 
@@ -112,6 +115,7 @@ class Key(Enum):
 class Spacement(NamedTuple):
     position: Fraction
     duration: Fraction
+    is_staccato: bool = False
 
     def __repr__(self) -> str:
         return f"pos_{self.position}_dur_{self.duration}"
@@ -174,7 +178,7 @@ class Difficulty:
             if isinstance(sub_difficulty, self.__class__):
                 sub_difficulty_str = _add_indent(repr(sub_difficulty))
                 result += f"{key}:\n{sub_difficulty_str}"
-            else:
+            elif isinstance(sub_difficulty, (int, float)):
                 result += f"{key}: {float(sub_difficulty):.2f}"
             result += "\n"
         return result
@@ -207,15 +211,12 @@ class Difficulty:
 
 @frozen
 class MusicalElement:
-
     _name: Optional[str] = field(default=None, kw_only=True)
-    _difficulty: Optional[Difficulty] = field(default=None, kw_only=True)
+    _related: Optional[Set["MusicalElement"]] = field(default=None, kw_only=True)
 
     @property
     def difficulty(self) -> Difficulty:
-        if self._difficulty is None:
-            return self._default_difficulty()
-        return self._difficulty
+        raise NotImplementedError
 
     @property
     def element_type(self) -> str:
@@ -227,11 +228,23 @@ class MusicalElement:
             return self._name
         return self._default_name()
 
+    @property
+    def key(self) -> Tuple[str, str]:
+        return self.__class__.__name__, self.name
+
+    @property
+    def related_musical_elements(self) -> Tuple["MusicalElement", ...]:
+        related: List["MusicalElement"] = [self]
+        if self._related:
+            related.extend(self._related)
+        for attr in self.__attrs_attrs__:
+            attr_value = getattr(self, attr.name)  # type: ignore
+            if isinstance(attr_value, MusicalElement):
+                related.append(attr_value)
+
+        # deduplicate
+        return tuple({element.key: element for element in related}.values())
+
     @abstractmethod
     def _default_name(self) -> str:
         """Define default name for musical element."""
-
-    @abstractmethod
-    def _default_difficulty(self) -> Difficulty:
-        """Define default difficulty for musical element."""
-        raise NotImplementedError

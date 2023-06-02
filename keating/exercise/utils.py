@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from fractions import Fraction
 from functools import reduce
-from typing import Callable, Dict, Iterable, Sequence
+from typing import Callable, Dict, Iterable, Sequence, Tuple
 
 
 def group_by(data: Iterable, key: Callable) -> Dict:
@@ -58,3 +58,10 @@ def lcm(fractions: Sequence[Fraction]) -> Fraction:
         )
 
     return Fraction(reduce(lambda x, y: _lcm(x, y), fractions))
+
+
+def discretize(floats: Sequence[float], precision: int = 2) -> Tuple[Fraction, ...]:
+    def _discretize(float_: float) -> Fraction:
+        return Fraction(round(float_, precision)).limit_denominator()
+
+    return tuple(map(_discretize, floats))

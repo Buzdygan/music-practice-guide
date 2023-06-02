@@ -1,5 +1,4 @@
 from typing import (
-    Optional,
     Tuple,
     Set,
     Mapping,
@@ -10,7 +9,6 @@ from collections import defaultdict
 from attrs import frozen, field
 
 from exercise.music_representation.base import (
-    IntervalSequence,
     IntervalSet,
     RelativePitch,
     Mode,
@@ -18,18 +16,21 @@ from exercise.music_representation.base import (
     OCTAVE,
 )
 from exercise.music_representation.utils.repr import to_roman_numeral
-from exercise.music_representation.pitch_progression import PitchProgression
 
 
 @frozen
 class Chord(MusicalElement):
     intervals: IntervalSet
 
+    @property
+    def num_notes(self) -> int:
+        return len(self.intervals)
+
     def _default_name(self) -> str:
         return "-".join(map(str, sorted(self.intervals)))
 
     def __iter__(self) -> Iterator[RelativePitch]:
-        return iter(sorted(self.intervals))
+        yield from sorted(self.intervals)
 
     def __attrs_post_init__(self) -> None:
         # asserts that there are no duplicates among intervals (with respect to the octave)
@@ -39,7 +40,7 @@ class Chord(MusicalElement):
 
 
 @frozen
-class ChordVoicing(MusicalElement):
+class Voicing(MusicalElement):
     _interval_shifts: Mapping[RelativePitch, Set[int]] = field(default={})
 
     @property
@@ -50,7 +51,7 @@ class ChordVoicing(MusicalElement):
         return interval_shifts
 
     @classmethod
-    def default(cls) -> "ChordVoicing":
+    def default(cls) -> "Voicing":
         return cls(name="default_voicing")
 
     def _default_name(self) -> str:
@@ -65,6 +66,26 @@ class ChordVoicing(MusicalElement):
             for interval_idx, relative_pitch in enumerate(chord)
             for octave_shift in self.interval_shifts[interval_idx]
         }
+
+
+@frozen
+class ChordVoicing(MusicalElement):
+    chord: Chord
+    voicing: Voicing
+
+    @property
+    def intervals(self) -> IntervalSet:
+        return self.voicing(self.chord)
+
+    @property
+    def num_notes(self) -> int:
+        return len(self.intervals)
+
+    def _default_name(self) -> str:
+        return f"{self.chord.name}_{self.voicing.name}"
+
+    def __iter__(self) -> Iterator[RelativePitch]:
+        yield from sorted(self.intervals)
 
 
 @frozen
@@ -84,66 +105,3 @@ class ChordProgression(MusicalElement):
 
     def __iter__(self) -> Iterator[Tuple[RelativePitch, Chord]]:
         yield from self.chords
-
-
-class Arpeggio(MusicalElement):
-    def __call__(
-        self,
-        chord: Chord,
-        voicing: Optional[ChordVoicing] = None,
-    ) -> PitchProgression:
-        """Arpeggiate chord."""
-        if voicing is None:
-            voicing = ChordVoicing.default()
-        return PitchProgression(
-            name=f"chord_{chord.name}_arpeggio_{self.name}",
-            relative_pitches=self._arpeggiate(
-                sorted_intervals=tuple(
-                    sorted(voicing(chord) if voicing else chord.intervals)
-                )
-            ),
-        )
-
-    @classmethod
-    def default(cls) -> "Arpeggio":
-        return cls(name="default_arpeggio")
-
-    def _arpeggiate(self, sorted_intervals: IntervalSequence) -> IntervalSequence:
-        """Arpeggiate chord intervals"""
-        return sorted_intervals
-
-    def _default_name(self) -> str:
-        return self.__class__.__name__
-
-
-@frozen
-class PitchSequenceArpeggio(Arpeggio):
-    pitch_idx_sequence: Tuple[int, ...]
-
-    def _arpeggiate(self, sorted_intervals: IntervalSequence) -> IntervalSequence:
-        assert all(
-            pitch >= 0 for pitch in self.pitch_idx_sequence
-        ), f"Arpeggio {self.name} has negative pitch idx in pitch_idx_sequence"
-
-        assert max(self.pitch_idx_sequence) < len(sorted_intervals), (
-            f"Arpeggio {self.name} pitch sequence can't be applied to intervals {sorted_intervals} "
-            f"because of interval mismatch."
-        )
-        return tuple(
-            sorted_intervals[pitch_idx] for pitch_idx in self.pitch_idx_sequence
-        )
-
-    def _default_name(self) -> str:
-        return "-".join(map(str, self.pitch_idx_sequence))
-
-
-@frozen
-class UpDownArpeggio(Arpeggio):
-    def _arpeggiate(self, sorted_intervals: IntervalSequence) -> IntervalSequence:
-        return (
-            super()._arpeggiate(sorted_intervals=sorted_intervals)
-            + super()._arpeggiate(sorted_intervals=sorted_intervals)[-2:0:-1]
-        )
-
-    def _default_name(self) -> str:
-        return "up_down"
