@@ -8,6 +8,7 @@ from exercise.base import Exercise, ExercisePractice
 
 from exercise.generators.exercise_generator import ExerciseGenerator
 from exercise.generators.hand_coordination import HandCoordinationPieceGenerator
+from exercise.generators.melodies import MelodiesPieceGenerator
 from exercise.generators.pitch_progressions import PitchProgressionsPieceGenerator
 from exercise.generators.rhythms import RhythmsPieceGenerator
 from exercise.music_representation.base import Key
@@ -62,7 +63,8 @@ def _get_scores(piece_generator, num_pieces: Optional[int] = None) -> Iterator[S
 
 # scores = list(_get_scores(piece_generator=HandCoordinationPieceGenerator()))
 # scores = list(_get_scores(piece_generator=RhythmsPieceGenerator()))
-scores = list(_get_scores(piece_generator=PitchProgressionsPieceGenerator()))
+# scores = list(_get_scores(piece_generator=PitchProgressionsPieceGenerator()))
+scores = list(_get_scores(piece_generator=MelodiesPieceGenerator()))
 
 
 def render_sheet_music(request):
