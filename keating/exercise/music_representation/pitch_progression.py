@@ -6,6 +6,7 @@ from typing import (
 
 from attrs import frozen
 
+import exercise.music_representation.utils.pitch_progression_complexity as pp_complexity
 from exercise.music_representation.base import (
     Difficulty,
     RelativePitch,
@@ -51,7 +52,22 @@ class PitchProgression(MusicalElement):
         # TODO: add more difficulty metrics
         return Difficulty(
             sub_difficulties={
-                "length": len(self.relative_pitches),
+                "spread": pp_complexity.spread(relative_pitches=self.relative_pitches),
+                "avg_gap": pp_complexity.avg_gap(
+                    relative_pitches=self.relative_pitches
+                ),
+                "max_gap": pp_complexity.max_gap(
+                    relative_pitches=self.relative_pitches
+                ),
+                "pitch_variety": pp_complexity.variety(
+                    relative_pitches=self.relative_pitches
+                ),
+                "variability": pp_complexity.variability(
+                    relative_pitches=self.relative_pitches
+                ),
+                "unpredictability": pp_complexity.unpredictability(
+                    relative_pitches=self.relative_pitches
+                ),
             }
         )
 

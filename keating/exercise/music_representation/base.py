@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Any, Dict, List, Optional, Set, Tuple, NamedTuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, NamedTuple, Union
 from fractions import Fraction
 from enum import Enum
 
@@ -232,15 +232,21 @@ class MusicalElement:
     def key(self) -> Tuple[str, str]:
         return self.__class__.__name__, self.name
 
+    # TODO(refactor)
     @property
     def related_musical_elements(self) -> Tuple["MusicalElement", ...]:
         related: List["MusicalElement"] = [self]
         if self._related:
-            related.extend(self._related)
+            for related_element in self._related:
+                related.extend(related_element.related_musical_elements)
         for attr in self.__attrs_attrs__:
             attr_value = getattr(self, attr.name)  # type: ignore
             if isinstance(attr_value, MusicalElement):
-                related.append(attr_value)
+                related.extend(attr_value.related_musical_elements)
+            elif isinstance(attr_value, Iterable):
+                for element in attr_value:
+                    if isinstance(element, MusicalElement):
+                        related.extend(element.related_musical_elements)
 
         # deduplicate
         return tuple({element.key: element for element in related}.values())

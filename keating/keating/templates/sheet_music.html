@@ -26,6 +26,7 @@
     <div class="score row">
         <span id="score-{{ forloop.counter }}" class="column left"></span>
         <pre id="score-{{ forloop.counter }}-difficulty" class="column right">{{ score.difficulty|safe}}</pre>
+        <pre id="score-{{ forloop.counter }}-musical-elements" class="column right">{{ score.musical_elements|safe}}</pre>
         <script>
             var sheetMusicDiv = document.getElementById("score-{{ forloop.counter }}");
             var abcNotation = "{{ score.sheet|escapejs }}"; 

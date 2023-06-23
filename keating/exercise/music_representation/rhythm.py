@@ -11,7 +11,7 @@ from exercise.music_representation.base import (
     Spacement,
     MusicalElement,
 )
-from exercise.music_representation.rhythm_complexity import (
+from exercise.music_representation.utils.rhythm_complexity import (
     interonset,
     unpredictability,
     syncopation,

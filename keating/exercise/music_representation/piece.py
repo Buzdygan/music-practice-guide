@@ -65,6 +65,13 @@ class Piece(MusicalElement):
             return self.left_hand_part.part_id  # type: ignore
         return f"{self.left_hand_part.part_id}_{self.right_hand_part.part_id}"
 
+    @property
+    def musical_elements_str(self) -> str:
+        return "\n".join(
+            f"{element.key[0]}: {element.key[1]}"
+            for element in self.related_musical_elements
+        )
+
     def _default_name(self) -> str:
         """Define default name for musical element."""
         return f"Piece {self.piece_id}"

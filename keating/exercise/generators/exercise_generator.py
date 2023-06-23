@@ -23,7 +23,7 @@ from exercise.familiarity import Familiarity, Level
 class PieceGeneratorLike(Protocol):
     generator_id: str
 
-    def pieces(self) -> Iterator[Tuple[Piece, Difficulty]]:
+    def pieces(self) -> Iterator[Piece]:
         ...
 
 
@@ -57,10 +57,10 @@ class ExerciseGenerator(ABC):
         return self._piece_generator.generator_id
 
     def exercises(self) -> Iterator[Tuple[Exercise, Difficulty]]:
-        for piece, difficulty in self._piece_generator.pieces():
+        for piece in self._piece_generator.pieces():
             yield Exercise(
                 exercise_id=f"{self.generator_id}_{piece.piece_id}", piece=piece
-            ), difficulty
+            ), piece.difficulty
 
     def generate(self) -> ExercisePractice:
         if is_ready_for_new_exercise(practice_logs=self._generator_practice_logs):

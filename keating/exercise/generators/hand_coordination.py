@@ -3,7 +3,6 @@ import math
 from typing import Iterable, Iterator, Optional, Tuple
 from exercise.config import MAX_MEASURES
 
-from exercise.learning import Difficulty
 from exercise.music_representation.melody import Melody
 from exercise.music_representation.piece import Piece
 from exercise.music_representation.pitch_progression import PitchProgression
@@ -30,13 +29,13 @@ def _conform_rhythms(
     )
 
 
-def create_piece_with_difficulty(
+def create_piece(
     left_hand_rhythm: Rhythm,
     left_hand_pitch_progression: PitchProgression,
     right_hand_rhythm: Rhythm,
     right_hand_pitch_progression: PitchProgression,
     max_measure_num: int = MAX_MEASURES,
-) -> Optional[Tuple[Piece, Difficulty]]:
+) -> Optional[Piece]:
     """Create piece with difficulty."""
 
     meter = left_hand_rhythm.meter
@@ -67,13 +66,6 @@ def create_piece_with_difficulty(
                 pitch_progression=right_hand_pitch_progression,
                 num_measures=num_measures,
             ),
-        ), Difficulty(
-            sub_difficulties={
-                "left_hand_rhythm": left_hand_rhythm.difficulty,
-                "left_hand_pitch_progression": left_hand_pitch_progression.difficulty,
-                "right_hand_rhythm": right_hand_rhythm.difficulty,
-                "right_hand_pitch_progression": right_hand_pitch_progression.difficulty,
-            }
         )
 
     return None
@@ -146,7 +138,7 @@ class HandCoordinationPieceGenerator:
             ):
                 yield rhythm, pitch_progression
 
-    def pieces(self) -> Iterator[Tuple[Piece, Difficulty]]:
+    def pieces(self) -> Iterator[Piece]:
         for left_hand_rhythm, left_hand_progression in self._iterate_left_melodies():
             for (
                 right_hand_rhythm,
@@ -155,11 +147,11 @@ class HandCoordinationPieceGenerator:
                 left_hand_rhythm=left_hand_rhythm,
                 left_hand_progression=left_hand_progression,
             ):
-                piece_w_difficulty = create_piece_with_difficulty(
+                piece = create_piece(
                     left_hand_rhythm=left_hand_rhythm,
                     left_hand_pitch_progression=left_hand_progression,
                     right_hand_rhythm=right_hand_rhythm,
                     right_hand_pitch_progression=right_hand_progression,
                 )
-                if piece_w_difficulty is not None:
-                    yield piece_w_difficulty
+                if piece is not None:
+                    yield piece

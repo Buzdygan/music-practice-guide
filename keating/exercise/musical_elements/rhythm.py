@@ -31,6 +31,8 @@ DURATIONS_4_4 = {
     (QUARTER, dot(QUARTER), dot(QUARTER)),
 }
 
+QUARTER_RHYTHM = Rhythm(meter=METER_4_4, spacements=rhytmic_line(durations=(QUARTER,)))
+
 
 def all_durations(length: Fraction):
     if length == 0:

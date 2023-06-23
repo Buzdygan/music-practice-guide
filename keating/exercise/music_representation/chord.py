@@ -11,32 +11,43 @@ from attrs import frozen, field
 from exercise.music_representation.base import (
     IntervalSet,
     RelativePitch,
-    Mode,
     MusicalElement,
     OCTAVE,
 )
-from exercise.music_representation.utils.repr import to_roman_numeral
 
 
 @frozen
 class Chord(MusicalElement):
     intervals: IntervalSet
+    relative_root: RelativePitch = field(default=0)
 
     @property
     def num_notes(self) -> int:
         return len(self.intervals)
 
+    @property
+    def name(self) -> str:
+        name = super().name
+        if self.relative_root != 0:
+            name = f"{self.relative_root}{name}"
+        return name
+
     def _default_name(self) -> str:
         return "-".join(map(str, sorted(self.intervals)))
 
     def __iter__(self) -> Iterator[RelativePitch]:
-        yield from sorted(self.intervals)
+        yield from (
+            self.relative_root + interval for interval in sorted(self.intervals)
+        )
 
     def __attrs_post_init__(self) -> None:
         # asserts that there are no duplicates among intervals (with respect to the octave)
         assert len(self.intervals) == len(
             set(interval % OCTAVE for interval in self.intervals)
         ), f"Chord {self.name} has duplicate intervals"
+
+    def __hash__(self) -> int:
+        return hash((self.relative_root,) + tuple(sorted(list(self.intervals))))
 
 
 @frozen
@@ -67,6 +78,14 @@ class Voicing(MusicalElement):
             for octave_shift in self.interval_shifts[interval_idx]
         }
 
+    def __hash__(self) -> int:
+        return hash(
+            tuple(
+                (relative_pitch, tuple(sorted(shifts)))
+                for relative_pitch, shifts in sorted(self.interval_shifts.items())
+            )
+        )
+
 
 @frozen
 class ChordVoicing(MusicalElement):
@@ -90,18 +109,10 @@ class ChordVoicing(MusicalElement):
 
 @frozen
 class ChordProgression(MusicalElement):
-    mode: Mode
-    chords: Tuple[Tuple[RelativePitch, Chord], ...]
+    chords: Tuple[Chord, ...]
 
     def _default_name(self) -> str:
-        return (
-            self.mode.value
-            + "_"
-            + "-".join(
-                f"{to_roman_numeral(pitch + 1)}{intervals}"
-                for pitch, intervals in self.chords
-            )
-        )
+        return "-".join(chord.name for chord in self.chords)
 
-    def __iter__(self) -> Iterator[Tuple[RelativePitch, Chord]]:
+    def __iter__(self) -> Iterator[Chord]:
         yield from self.chords
