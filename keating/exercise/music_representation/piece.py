@@ -9,6 +9,7 @@ from exercise.music_representation.base import (
     MusicalElement,
     RelativeNote,
 )
+from exercise.music_representation.utils.notes import get_notes_duration, repeat_notes
 from exercise.note_positioning import shift_notes_if_needed
 
 
@@ -50,7 +51,10 @@ class Piece(MusicalElement):
             )
 
     def get_notes(
-        self, key: Key, shift_if_needed: bool = True
+        self,
+        key: Key,
+        shift_if_needed: bool = True,
+        repeat_hand_if_needed: bool = True,
     ) -> Tuple[Optional[Tuple[RelativeNote, ...]], Optional[Tuple[RelativeNote, ...]]]:
 
         left_hand_notes = self.left_hand_part.notes if self.left_hand_part else None
@@ -63,12 +67,21 @@ class Piece(MusicalElement):
                 right_hand_notes=right_hand_notes,
             )
 
-        if left_hand_notes is None or right_hand_notes is None:
+        if (
+            left_hand_notes is None
+            or right_hand_notes is None
+            or not repeat_hand_if_needed
+        ):
             return left_hand_notes, right_hand_notes
 
-        return (
-            left_hand_notes * math.ceil(len(right_hand_notes) / len(left_hand_notes)),
-            right_hand_notes * math.ceil(len(left_hand_notes) / len(right_hand_notes)),
+        left_duration = get_notes_duration(notes=left_hand_notes)
+        right_duration = get_notes_duration(notes=right_hand_notes)
+        return repeat_notes(
+            notes=left_hand_notes,
+            num_repetitions=math.ceil(right_duration / left_duration),
+        ), repeat_notes(
+            notes=right_hand_notes,
+            num_repetitions=math.ceil(left_duration / right_duration),
         )
 
     @property

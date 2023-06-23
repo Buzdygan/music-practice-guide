@@ -1,7 +1,7 @@
 from collections import defaultdict
 from fractions import Fraction
 from typing import Dict, Iterator, List, Optional, Tuple
-from exercise.music_representation.base import Key, RelativeNote, Spacement
+from exercise.music_representation.base import Key, RelativeNote
 from exercise.music_representation.utils.spacements import (
     extract_pulse_length_and_onsets,
 )
@@ -53,13 +53,7 @@ def _group_into_bars(
 
     for bar_number in range(max_bar_number + 1):
         yield tuple(
-            RelativeNote(
-                relative_pitch=relative_note.relative_pitch,
-                spacement=relative_note.spacement._replace(
-                    position=relative_note.spacement.position - bar_number * meter
-                ),
-                modifiers=relative_note.modifiers,
-            )
+            relative_note.shift_by(duration=-bar_number * meter)
             for relative_note in bar_to_notes[bar_number]
         )
 
@@ -132,30 +126,24 @@ def _convert_into_bar(
             bar_relative_notes.append(relative_note)
             continue
         bar_relative_notes.append(
-            RelativeNote(
-                relative_pitch=relative_note.relative_pitch,
+            relative_note._replace(
                 spacement=relative_note.spacement._replace(
                     duration=meter - relative_note.spacement.position,
                 ),
-                modifiers=relative_note.modifiers,
             )
         )
         if not relative_note.spacement.is_staccato:
-            remaining_relative_notes.append(
-                RelativeNote(
-                    relative_pitch=relative_note.relative_pitch,
-                    spacement=Spacement(
-                        position=Fraction(0),
-                        duration=(
-                            relative_note.spacement.duration
-                            - meter
-                            + relative_note.spacement.position
-                        ),
-                        is_staccato=False,
+            relative_note = relative_note._replace(
+                spacement=relative_note.spacement._replace(
+                    position=Fraction(0),
+                    duration=(
+                        relative_note.spacement.duration
+                        - meter
+                        + relative_note.spacement.position
                     ),
-                    modifiers=relative_note.modifiers,
-                )
+                ),
             )
+            remaining_relative_notes.append(relative_note)
 
     result: str = ""
     for duration, _relative_notes, add_tie in _iterate_notes_in_bar(
@@ -178,6 +166,9 @@ def _convert_into_bar(
 def _get_notes(
     key: Key, meter: Fraction, relative_notes: Tuple[RelativeNote, ...]
 ) -> str:
+    relative_notes = tuple(
+        filter(lambda note: not note.spacement.is_rest, relative_notes)
+    )
     remaining_relative_notes: Tuple[RelativeNote, ...] = ()
     bars: List[str] = []
     for relative_bar in _group_into_bars(meter=meter, relative_notes=relative_notes):

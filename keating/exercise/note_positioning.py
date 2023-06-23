@@ -13,14 +13,7 @@ def _shift_notes(
     notes: Tuple[RelativeNote, ...],
     shift: int,
 ) -> Tuple[RelativeNote, ...]:
-    return tuple(
-        RelativeNote(
-            relative_pitch=note.relative_pitch + shift,
-            spacement=note.spacement,
-            modifiers=note.modifiers,
-        )
-        for note in notes
-    )
+    return tuple(note.shift_by(pitch_interval=shift) for note in notes)
 
 
 def _highest(notes: Tuple[RelativeNote, ...]) -> int:

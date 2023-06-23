@@ -116,6 +116,15 @@ class Spacement(NamedTuple):
     position: Fraction
     duration: Fraction
     is_staccato: bool = False
+    is_rest: bool = False
+
+    def shift_by(self, duration: Fraction) -> "Spacement":
+        return Spacement(
+            position=self.position + duration,
+            duration=self.duration,
+            is_staccato=self.is_staccato,
+            is_rest=self.is_rest,
+        )
 
     def __repr__(self) -> str:
         return f"pos_{self.position}_dur_{self.duration}"
@@ -125,6 +134,17 @@ class RelativeNote(NamedTuple):
     relative_pitch: RelativePitch
     spacement: Spacement
     modifiers: Tuple[Modifier, ...] = ()
+
+    def shift_by(
+        self,
+        pitch_interval: RelativePitch = 0,
+        duration: Fraction = Fraction(0),
+    ) -> "RelativeNote":
+        return RelativeNote(
+            relative_pitch=self.relative_pitch + pitch_interval,
+            spacement=self.spacement.shift_by(duration=duration),
+            modifiers=self.modifiers,
+        )
 
     def __repr__(self) -> str:
         return (

@@ -37,7 +37,7 @@ def rhytmic_line(durations: Tuple[Fraction, ...]) -> Tuple[Spacement, ...]:
 
 
 def get_spacements_duration(spacements: Tuple[Spacement, ...]) -> Fraction:
-    return Fraction(sum(spacement.duration for spacement in spacements))
+    return max(spacement.position + spacement.duration for spacement in spacements)
 
 
 def multiply_spacements(
