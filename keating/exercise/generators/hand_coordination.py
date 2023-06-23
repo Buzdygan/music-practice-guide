@@ -1,7 +1,4 @@
-from fractions import Fraction
-import math
 from typing import Iterable, Iterator, Optional, Tuple
-from exercise.config import MAX_MEASURES
 
 from exercise.music_representation.melody import Melody
 from exercise.music_representation.piece import Piece
@@ -12,61 +9,8 @@ from exercise.musical_elements.pitch_progression import (
     PITCH_PROGRESSIONS,
 )
 from exercise.musical_elements.rhythm import RHYTHMS
-from exercise.utils import lcm
 
 MAX_PITCH_GAP = 4
-
-
-def _conform_rhythms(
-    left_hand_rhythm: Rhythm, right_hand_rhythm: Rhythm
-) -> Tuple[int, int, Fraction]:
-    """Conform rhythms to the same duration."""
-    duration = lcm([left_hand_rhythm.duration, right_hand_rhythm.duration])
-    return (
-        int(duration / left_hand_rhythm.duration),
-        int(duration / right_hand_rhythm.duration),
-        duration,
-    )
-
-
-def create_piece(
-    left_hand_rhythm: Rhythm,
-    left_hand_pitch_progression: PitchProgression,
-    right_hand_rhythm: Rhythm,
-    right_hand_pitch_progression: PitchProgression,
-    max_measure_num: int = MAX_MEASURES,
-) -> Optional[Piece]:
-    """Create piece with difficulty."""
-
-    meter = left_hand_rhythm.meter
-    left_repetitions, right_repetitions, duration = _conform_rhythms(
-        left_hand_rhythm, right_hand_rhythm
-    )
-    left_notes = len(list(left_hand_rhythm)) * left_repetitions
-    right_notes = len(list(right_hand_rhythm)) * right_repetitions
-
-    max_repetitions = int(max_measure_num * meter / duration)
-    for repetition in range(1, max_repetitions + 1):
-        num_measures = math.ceil(repetition * duration / meter)
-
-        if left_notes * repetition < len(list(left_hand_pitch_progression)):
-            continue
-
-        if right_notes * repetition < len(list(right_hand_pitch_progression)):
-            continue
-
-        return Piece(
-            left_hand_part=Melody(
-                rhythm=left_hand_rhythm,
-                pitch_progression=left_hand_pitch_progression,
-            ),
-            right_hand_part=Melody(
-                rhythm=right_hand_rhythm,
-                pitch_progression=right_hand_pitch_progression,
-            ),
-        )
-
-    return None
 
 
 def iterate_matching_rhythms(rhythm: Rhythm) -> Iterator[Rhythm]:
@@ -145,14 +89,16 @@ class HandCoordinationPieceGenerator:
                 left_hand_rhythm=left_hand_rhythm,
                 left_hand_progression=left_hand_progression,
             ):
-                piece = create_piece(
-                    left_hand_rhythm=left_hand_rhythm,
-                    left_hand_pitch_progression=left_hand_progression,
-                    right_hand_rhythm=right_hand_rhythm,
-                    right_hand_pitch_progression=right_hand_progression,
+                yield Piece(
+                    left_hand_part=Melody(
+                        rhythm=left_hand_rhythm,
+                        pitch_progression=left_hand_progression,
+                    ),
+                    right_hand_part=Melody(
+                        rhythm=right_hand_rhythm,
+                        pitch_progression=right_hand_progression,
+                    ),
                 )
-                if piece is not None:
-                    yield piece
 
 
 print(len(list(HandCoordinationPieceGenerator().pieces())))
