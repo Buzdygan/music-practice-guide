@@ -59,12 +59,10 @@ def create_piece(
             left_hand_part=Melody(
                 rhythm=left_hand_rhythm,
                 pitch_progression=left_hand_pitch_progression,
-                num_measures=num_measures,
             ),
             right_hand_part=Melody(
                 rhythm=right_hand_rhythm,
                 pitch_progression=right_hand_pitch_progression,
-                num_measures=num_measures,
             ),
         )
 
@@ -155,3 +153,6 @@ class HandCoordinationPieceGenerator:
                 )
                 if piece is not None:
                     yield piece
+
+
+print(len(list(HandCoordinationPieceGenerator().pieces())))

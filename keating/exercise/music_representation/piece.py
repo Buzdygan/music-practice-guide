@@ -1,8 +1,15 @@
 from fractions import Fraction
+import math
 from typing import Dict, Optional, Protocol, Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import Difficulty, MusicalElement, RelativeNote
+from exercise.music_representation.base import (
+    Difficulty,
+    Key,
+    MusicalElement,
+    RelativeNote,
+)
+from exercise.note_positioning import shift_notes_if_needed
 
 
 class PartLike(Protocol):
@@ -41,6 +48,28 @@ class Piece(MusicalElement):
                 f"Left hand meter {self.left_hand_part.meter} "
                 f"does not match right hand meter {self.right_hand_part.meter}"
             )
+
+    def get_notes(
+        self, key: Key, shift_if_needed: bool = True
+    ) -> Tuple[Optional[Tuple[RelativeNote, ...]], Optional[Tuple[RelativeNote, ...]]]:
+
+        left_hand_notes = self.left_hand_part.notes if self.left_hand_part else None
+        right_hand_notes = self.right_hand_part.notes if self.right_hand_part else None
+
+        if shift_if_needed:
+            left_hand_notes, right_hand_notes = shift_notes_if_needed(
+                key=key,
+                left_hand_notes=left_hand_notes,
+                right_hand_notes=right_hand_notes,
+            )
+
+        if left_hand_notes is None or right_hand_notes is None:
+            return left_hand_notes, right_hand_notes
+
+        return (
+            left_hand_notes * math.ceil(len(right_hand_notes) / len(left_hand_notes)),
+            right_hand_notes * math.ceil(len(left_hand_notes) / len(right_hand_notes)),
+        )
 
     @property
     def difficulty(self) -> Difficulty:

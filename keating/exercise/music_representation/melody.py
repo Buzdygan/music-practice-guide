@@ -2,9 +2,9 @@
 
 from fractions import Fraction
 from math import lcm
+import math
 from typing import (
     Iterator,
-    Optional,
     Tuple,
 )
 
@@ -28,7 +28,6 @@ from exercise.music_representation.chord import ChordProgression
 class Melody(MusicalElement):
     pitch_progression: PitchProgression
     rhythm: Rhythm
-    num_measures: Optional[int] = None
 
     def _default_name(self) -> str:
         return (
@@ -57,22 +56,18 @@ class Melody(MusicalElement):
         )
 
     def __iter__(self) -> Iterator[RelativeNote]:
-        pitches = list(self.pitch_progression)
+        pitches = list(self.pitch_progression) * math.ceil(
+            self.rhythm.num_notes / self.pitch_progression.num_notes
+        )
         spacements = tuple(self.rhythm)
-        if self.num_measures is None:
-            notes_num = lcm(len(pitches), len(spacements))
-            rhythm_repetitions = notes_num // len(spacements)
-            pitches_repetitions = notes_num // len(pitches)
-        else:
-            duration = self.num_measures * self.meter
-            rhythm_repetitions = int(duration / self.rhythm.duration)
-            pitches_repetitions = len(spacements) * rhythm_repetitions // len(pitches)
-
         yield from (
             RelativeNote(relative_pitch=pitch, spacement=spacement)
             for pitch, spacement in zip(
-                pitches * pitches_repetitions,
-                multiply_spacements(spacements=spacements, factor=rhythm_repetitions),
+                pitches,
+                multiply_spacements(
+                    spacements=spacements,
+                    factor=math.ceil(len(pitches) / len(spacements)),
+                ),
             )
         )
 

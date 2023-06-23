@@ -5,7 +5,6 @@ from attrs import frozen
 from exercise.music_representation.base import Difficulty, Key, MusicalElement
 from exercise.music_representation.piece import Piece
 from exercise.notation_abcjs import create_score
-from exercise.note_positioning import shift_notes_if_needed
 
 
 @frozen
@@ -34,23 +33,7 @@ class ExercisePractice:
 
     @property
     def score(self) -> str:
-        left_hand_notes = (
-            self.exercise.piece.left_hand_part.notes
-            if self.exercise.piece.left_hand_part is not None
-            else None
-        )
-
-        right_hand_notes = (
-            self.exercise.piece.right_hand_part.notes
-            if self.exercise.piece.right_hand_part is not None
-            else None
-        )
-
-        left_hand_notes, right_hand_notes = shift_notes_if_needed(
-            key=self.key,
-            left_hand_notes=left_hand_notes,
-            right_hand_notes=right_hand_notes,
-        )
+        left_hand_notes, right_hand_notes = self.exercise.piece.get_notes(key=self.key)
         return create_score(
             key=self.key,
             tempo=self.tempo,
