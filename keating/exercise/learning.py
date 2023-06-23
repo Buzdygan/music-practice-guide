@@ -78,13 +78,14 @@ def get_exercise_to_improve(
 
 
 def choose_new_exercise(
-    exercises_with_difficulty: Iterator[Tuple[Exercise, Difficulty]],
+    exercises: Iterator[Exercise],
     familiar_exercises: Set[Exercise],
 ) -> Optional[Exercise]:
     familiar_difficulties: Set[Difficulty] = set()
     pool_difficulties: Set[Difficulty] = set()
     exercise_pool: List[Exercise] = []
-    for exercise, difficulty in exercises_with_difficulty:
+    for exercise in exercises:
+        difficulty = exercise.difficulty
         # We already know this exercise, skip
         if exercise in familiar_exercises:
             familiar_difficulties.add(difficulty)

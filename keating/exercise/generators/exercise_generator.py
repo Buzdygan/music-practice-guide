@@ -1,13 +1,12 @@
 """ Exercise generators. """
 
 from abc import ABC
-from typing import Iterator, Optional, Protocol, Tuple
+from typing import Iterator, Optional, Protocol
 
 from logging import warning
 
 from exercise.base import Exercise, ExercisePractice
 from exercise.learning import (
-    Difficulty,
     START_TEMPO,
     get_key_practice_order,
     choose_new_exercise,
@@ -35,7 +34,7 @@ class ExerciseGenerator(ABC):
     ) -> None:
         self._practice_log = practice_log
         self._piece_generator = piece_generator
-        all_exercise_ids = {exercise.exercise_id for exercise, _ in self.exercises()}
+        all_exercise_ids = {exercise.exercise_id for exercise in self.exercises()}
         self._generator_practice_logs = [
             practice_log
             for practice_log in self._practice_log.get_practice_logs()
@@ -56,11 +55,11 @@ class ExerciseGenerator(ABC):
     def generator_id(self) -> str:
         return self._piece_generator.generator_id
 
-    def exercises(self) -> Iterator[Tuple[Exercise, Difficulty]]:
-        for piece in self._piece_generator.pieces():
-            yield Exercise(
-                exercise_id=f"{self.generator_id}_{piece.piece_id}", piece=piece
-            ), piece.difficulty
+    def exercises(self) -> Iterator[Exercise]:
+        yield from (
+            Exercise(exercise_id=f"{self.generator_id}_{piece.piece_id}", piece=piece)
+            for piece in self._piece_generator.pieces()
+        )
 
     def generate(self) -> ExercisePractice:
         if is_ready_for_new_exercise(practice_logs=self._generator_practice_logs):
@@ -77,7 +76,7 @@ class ExerciseGenerator(ABC):
 
     def _get_new_exercise(self) -> Optional[ExercisePractice]:
         exercise = choose_new_exercise(
-            exercises_with_difficulty=self.exercises(),
+            exercises=self.exercises(),
             familiar_exercises=set(
                 exercise
                 for exercise, familiarity in self._exercise_to_familiarity.items()

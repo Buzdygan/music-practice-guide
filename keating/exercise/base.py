@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Tuple
 from attrs import frozen
 
-from exercise.music_representation.base import Key, MusicalElement
+from exercise.music_representation.base import Difficulty, Key, MusicalElement
 from exercise.music_representation.piece import Piece
 from exercise.notation_abcjs import create_score
 from exercise.note_positioning import shift_notes_if_needed
@@ -15,7 +15,11 @@ class Exercise:
 
     @property
     def musical_elements(self) -> Tuple[MusicalElement, ...]:
-        return self.piece.musical_elements
+        return self.piece.related_musical_elements
+
+    @property
+    def difficulty(self) -> Difficulty:
+        return self.piece.difficulty
 
 
 @frozen
@@ -23,6 +27,10 @@ class ExercisePractice:
     exercise: Exercise
     key: Key
     tempo: int
+
+    @property
+    def difficulty(self) -> Difficulty:
+        return self.exercise.difficulty
 
     @property
     def score(self) -> str:
